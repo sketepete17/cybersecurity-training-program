@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/training/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   Send,
   MessageCircle,
@@ -67,12 +69,17 @@ const categoryOptions = [
 ];
 
 export default function SupportPage() {
+  const router = useRouter();
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<"new" | "tickets">("new");
   const [subject, setSubject] = useState("");
   const [category, setCategory] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [ticketReply, setTicketReply] = useState("");
+  const [isSendingReply, setIsSendingReply] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +87,7 @@ export default function SupportPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsSubmitting(false);
     setIsSubmitted(true);
+    addToast("Support ticket submitted successfully!", "success");
   };
 
   const resetForm = () => {
@@ -87,6 +95,54 @@ export default function SupportPage() {
     setCategory("");
     setMessage("");
     setIsSubmitted(false);
+  };
+
+  const handleTicketClick = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    addToast(`Viewing ticket ${ticket.id}`, "info");
+  };
+
+  const handleSendReply = async () => {
+    if (!ticketReply.trim() || !selectedTicket) return;
+    
+    setIsSendingReply(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsSendingReply(false);
+    setTicketReply("");
+    addToast("Reply sent successfully!", "success");
+  };
+
+  const handleLiveChat = () => {
+    addToast("Connecting to live chat support...", "info");
+    // Simulate chat connection
+    setTimeout(() => {
+      addToast("Live chat is currently available. A support agent will be with you shortly.", "success");
+    }, 1500);
+  };
+
+  const handleScheduleCall = () => {
+    addToast("Opening scheduling calendar...", "info");
+    // In a real app, this would open a calendar/scheduling widget
+    setTimeout(() => {
+      addToast("Please select a time slot for your call", "info");
+    }, 1000);
+  };
+
+  const handleAttachment = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".png,.jpg,.jpeg,.pdf";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          addToast("File size exceeds 10MB limit", "error");
+        } else {
+          addToast(`File "${file.name}" attached successfully`, "success");
+        }
+      }
+    };
+    input.click();
   };
 
   const getStatusBadge = (status: Ticket["status"]) => {
@@ -242,13 +298,20 @@ export default function SupportPage() {
                         <label className="text-sm font-medium text-foreground">
                           Attachments (optional)
                         </label>
-                        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
+                        <div 
+                          className="rounded-lg border-2 border-dashed border-border p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                          onClick={handleAttachment}
+                        >
                           <Paperclip className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
                           <p className="text-sm text-muted-foreground">
                             Drag and drop files here, or{" "}
                             <button
                               type="button"
                               className="text-primary hover:underline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAttachment();
+                              }}
                             >
                               browse
                             </button>
@@ -328,41 +391,102 @@ export default function SupportPage() {
               )}
 
               {activeTab === "tickets" && (
-                <Card className="border-border bg-card">
-                  <CardHeader>
-                    <CardTitle className="text-foreground">My Support Tickets</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {mockTickets.map((ticket) => (
-                      <div
-                        key={ticket.id}
-                        className="rounded-lg border border-border p-4 hover:bg-secondary/30 transition-colors cursor-pointer group"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-sm text-muted-foreground">
-                              {ticket.id}
-                            </span>
-                            {getStatusBadge(ticket.status)}
-                            {getPriorityBadge(ticket.priority)}
+                <div className="space-y-6">
+                  <Card className="border-border bg-card">
+                    <CardHeader>
+                      <CardTitle className="text-foreground">My Support Tickets</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {mockTickets.map((ticket) => (
+                        <div
+                          key={ticket.id}
+                          onClick={() => handleTicketClick(ticket)}
+                          className={`rounded-lg border p-4 transition-colors cursor-pointer group ${
+                            selectedTicket?.id === ticket.id
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-secondary/30"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono text-sm text-muted-foreground">
+                                {ticket.id}
+                              </span>
+                              {getStatusBadge(ticket.status)}
+                              {getPriorityBadge(ticket.priority)}
+                            </div>
+                            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                           </div>
-                          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <h3 className="font-medium text-foreground mb-2">
+                            {ticket.subject}
+                          </h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>Created {ticket.createdAt}</span>
+                            <span>Updated {ticket.lastUpdate}</span>
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="h-3 w-3" />
+                              {ticket.messages} messages
+                            </span>
+                          </div>
                         </div>
-                        <h3 className="font-medium text-foreground mb-2">
-                          {ticket.subject}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          <span>Created {ticket.createdAt}</span>
-                          <span>Updated {ticket.lastUpdate}</span>
-                          <span className="flex items-center gap-1">
-                            <MessageCircle className="h-3 w-3" />
-                            {ticket.messages} messages
-                          </span>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Ticket Detail Panel */}
+                  {selectedTicket && (
+                    <Card className="border-border bg-card">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-foreground">
+                            {selectedTicket.id}: {selectedTicket.subject}
+                          </CardTitle>
+                          {getStatusBadge(selectedTicket.status)}
                         </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="rounded-lg bg-secondary/30 p-4">
+                          <p className="text-sm text-muted-foreground mb-2">Your message:</p>
+                          <p className="text-foreground">
+                            I am experiencing issues with this feature. Please help resolve this as soon as possible.
+                          </p>
+                        </div>
+                        
+                        {selectedTicket.status !== "open" && (
+                          <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
+                            <p className="text-sm text-muted-foreground mb-2">Support Response:</p>
+                            <p className="text-foreground">
+                              Thank you for contacting us. We are looking into this issue and will get back to you shortly with a resolution.
+                            </p>
+                          </div>
+                        )}
+                        
+                        <div className="pt-4 border-t border-border">
+                          <label className="text-sm font-medium text-foreground block mb-2">
+                            Add a Reply
+                          </label>
+                          <textarea
+                            value={ticketReply}
+                            onChange={(e) => setTicketReply(e.target.value)}
+                            placeholder="Type your reply here..."
+                            rows={3}
+                            className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                          />
+                          <div className="flex justify-end mt-3">
+                            <Button
+                              onClick={handleSendReply}
+                              disabled={!ticketReply.trim() || isSendingReply}
+                              className="bg-primary text-primary-foreground hover:bg-primary/90"
+                            >
+                              {isSendingReply ? "Sending..." : "Send Reply"}
+                              <Send className="ml-2 h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               )}
             </div>
 
@@ -376,7 +500,10 @@ export default function SupportPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <button className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group">
+                  <button 
+                    onClick={handleLiveChat}
+                    className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group"
+                  >
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                       <Headphones className="h-5 w-5 text-primary" />
                     </div>
@@ -389,7 +516,10 @@ export default function SupportPage() {
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </button>
 
-                  <button className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group">
+                  <button 
+                    onClick={handleScheduleCall}
+                    className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group"
+                  >
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                       <User className="h-5 w-5 text-primary" />
                     </div>

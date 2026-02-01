@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/training/sidebar";
 import { modules, mockUserProgress } from "@/lib/training-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   Award,
   Download,
@@ -65,7 +67,91 @@ const mockCertificates: Certificate[] = [
 ];
 
 export default function CertificatesPage() {
+  const router = useRouter();
+  const { addToast } = useToast();
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState<string | null>(null);
+
+  const handleDownload = async (cert: Certificate, format: "pdf" | "png" = "pdf") => {
+    setIsDownloading(cert.id);
+    
+    // Simulate download generation
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    
+    // Create a demo certificate content
+    const certContent = `
+CERTIFICATE OF COMPLETION
+
+This is to certify that
+
+Jane Doe
+
+has successfully completed the training module
+
+${cert.moduleTitle}
+
+Score: ${cert.score}%
+Issue Date: ${cert.issueDate}
+Credential ID: ${cert.credentialId}
+
+CyberShield Security Training Platform
+    `.trim();
+    
+    // Create and download the file
+    const blob = new Blob([certContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `certificate-${cert.credentialId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    setIsDownloading(null);
+    addToast(`Certificate downloaded successfully!`, "success");
+  };
+
+  const handleShare = async (cert: Certificate) => {
+    setIsSharing(cert.id);
+    
+    const shareData = {
+      title: `${cert.moduleTitle} Certificate`,
+      text: `I've completed ${cert.moduleTitle} training with a score of ${cert.score}%! Credential ID: ${cert.credentialId}`,
+      url: `https://cybershield.app/verify/${cert.credentialId}`,
+    };
+    
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        addToast("Certificate shared successfully!", "success");
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(
+          `${shareData.text}\nVerify at: ${shareData.url}`
+        );
+        addToast("Certificate link copied to clipboard!", "success");
+      }
+    } catch {
+      // User cancelled or error
+      addToast("Share cancelled", "info");
+    }
+    
+    setIsSharing(null);
+  };
+
+  const handleRenew = (cert: Certificate) => {
+    addToast(`Redirecting to ${cert.moduleTitle} training...`, "info");
+    // Navigate to the module
+    router.push(`/modules/${cert.moduleId}`);
+  };
+
+  const handleVerificationPortal = () => {
+    addToast("Opening verification portal...", "info");
+    // In a real app, this would open the verification portal
+    window.open("https://cybershield.app/verify", "_blank");
+  };
 
   // Calculate completion stats
   const completedModules = modules.filter((m) =>
@@ -259,18 +345,40 @@ export default function CertificatesPage() {
                       </div>
 
                       <div className="flex items-center gap-2 mt-4">
-                        <Button size="sm" variant="outline" className="border-border">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-border"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(cert);
+                          }}
+                          disabled={isDownloading === cert.id}
+                        >
                           <Download className="h-4 w-4 mr-2" />
-                          Download
+                          {isDownloading === cert.id ? "Downloading..." : "Download"}
                         </Button>
-                        <Button size="sm" variant="outline" className="border-border">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="border-border"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(cert);
+                          }}
+                          disabled={isSharing === cert.id}
+                        >
                           <Share2 className="h-4 w-4 mr-2" />
-                          Share
+                          {isSharing === cert.id ? "Sharing..." : "Share"}
                         </Button>
                         {cert.status === "expired" && (
                           <Button
                             size="sm"
                             className="bg-primary text-primary-foreground hover:bg-primary/90 ml-auto"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRenew(cert);
+                            }}
                           >
                             Renew Certificate
                           </Button>
@@ -328,11 +436,19 @@ export default function CertificatesPage() {
                     </div>
 
                     <div className="mt-4 flex gap-2">
-                      <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                      <Button 
+                        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={() => handleDownload(selectedCert)}
+                        disabled={isDownloading === selectedCert.id}
+                      >
                         <Download className="h-4 w-4 mr-2" />
-                        Download PDF
+                        {isDownloading === selectedCert.id ? "Generating..." : "Download PDF"}
                       </Button>
-                      <Button variant="outline" className="border-border">
+                      <Button 
+                        variant="outline" 
+                        className="border-border"
+                        onClick={() => handleShare(selectedCert)}
+                      >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
@@ -399,6 +515,7 @@ export default function CertificatesPage() {
                       <Button
                         variant="link"
                         className="h-auto p-0 mt-2 text-primary"
+                        onClick={handleVerificationPortal}
                       >
                         Visit Verification Portal
                         <ExternalLink className="h-3 w-3 ml-1" />
