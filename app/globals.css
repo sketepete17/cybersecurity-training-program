@@ -119,6 +119,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-warning-foreground: oklch(0.15 0.05 85);
 }
 
 @layer base {
