@@ -2,6 +2,7 @@ import React from "react"
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { AuthProvider } from "@/lib/auth-context";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -42,7 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <Analytics />
       {/* v0 – built-with badge */}
   <div dangerouslySetInnerHTML={{ __html: `<div id="v0-built-with-button-41582dd3-6063-4db0-815d-575873350197" style="
