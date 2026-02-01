@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/toast";
+import { useDepartments, type Department } from "@/lib/departments-store";
 import {
   Building2,
   Users,
@@ -32,102 +33,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const departments = [
-  {
-    id: 1,
-    name: "Engineering",
-    head: "Michael Chen",
-    userCount: 156,
-    completionRate: 87,
-    avgScore: 92,
-    trend: "up",
-    overdue: 12,
-    certifications: 134,
-  },
-  {
-    id: 2,
-    name: "Sales",
-    head: "Sarah Johnson",
-    userCount: 89,
-    completionRate: 78,
-    avgScore: 85,
-    trend: "up",
-    overdue: 8,
-    certifications: 71,
-  },
-  {
-    id: 3,
-    name: "Marketing",
-    head: "Emily Davis",
-    userCount: 45,
-    completionRate: 92,
-    avgScore: 94,
-    trend: "up",
-    overdue: 2,
-    certifications: 43,
-  },
-  {
-    id: 4,
-    name: "Finance",
-    head: "Robert Wilson",
-    userCount: 32,
-    completionRate: 95,
-    avgScore: 96,
-    trend: "up",
-    overdue: 1,
-    certifications: 31,
-  },
-  {
-    id: 5,
-    name: "Human Resources",
-    head: "Lisa Anderson",
-    userCount: 18,
-    completionRate: 100,
-    avgScore: 98,
-    trend: "stable",
-    overdue: 0,
-    certifications: 18,
-  },
-  {
-    id: 6,
-    name: "Operations",
-    head: "James Brown",
-    userCount: 67,
-    completionRate: 72,
-    avgScore: 81,
-    trend: "down",
-    overdue: 15,
-    certifications: 52,
-  },
-  {
-    id: 7,
-    name: "Customer Support",
-    head: "Amanda Martinez",
-    userCount: 53,
-    completionRate: 83,
-    avgScore: 88,
-    trend: "up",
-    overdue: 6,
-    certifications: 45,
-  },
-  {
-    id: 8,
-    name: "Legal",
-    head: "David Thompson",
-    userCount: 12,
-    completionRate: 100,
-    avgScore: 97,
-    trend: "stable",
-    overdue: 0,
-    certifications: 12,
-  },
-];
-
 export default function DepartmentsPage() {
   const { addToast } = useToast();
+  const { departments, addDepartment, deleteDepartment } = useDepartments();
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedDept, setSelectedDept] = useState<typeof departments[0] | null>(null);
+  const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [newDeptName, setNewDeptName] = useState("");
   const [newDeptHead, setNewDeptHead] = useState("");
 
@@ -136,25 +47,27 @@ export default function DepartmentsPage() {
       addToast("Please enter a department name", "error");
       return;
     }
+    addDepartment(newDeptName, newDeptHead);
     addToast(`Department "${newDeptName}" created successfully!`, "success");
     setShowAddModal(false);
     setNewDeptName("");
     setNewDeptHead("");
   };
 
-  const handleEditDepartment = (dept: typeof departments[0]) => {
+  const handleEditDepartment = (dept: Department) => {
     addToast(`Editing ${dept.name} department...`, "info");
   };
 
-  const handleAddUsers = (dept: typeof departments[0]) => {
+  const handleAddUsers = (dept: Department) => {
     addToast(`Opening user assignment for ${dept.name}...`, "info");
   };
 
-  const handleDeleteDepartment = (dept: typeof departments[0]) => {
+  const handleDeleteDepartment = (dept: Department) => {
+    deleteDepartment(dept.id);
     addToast(`${dept.name} department deleted`, "success");
   };
 
-  const handleViewDetails = (dept: typeof departments[0]) => {
+  const handleViewDetails = (dept: Department) => {
     setSelectedDept(dept);
     addToast(`Viewing ${dept.name} details`, "info");
   };
