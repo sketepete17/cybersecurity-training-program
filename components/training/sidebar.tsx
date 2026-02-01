@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import {
-  Shield,
+  ShieldCheck,
   Home,
   BookOpen,
   BarChart3,
@@ -64,7 +64,7 @@ export function Sidebar() {
         <div className="flex h-full flex-col">
           <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Shield className="h-5 w-5 text-primary-foreground" />
+              <ShieldCheck className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
               <span className="text-lg font-semibold text-sidebar-foreground">
@@ -93,7 +93,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Shield className="h-5 w-5 text-primary-foreground" />
+            <ShieldCheck className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-semibold text-sidebar-foreground">
