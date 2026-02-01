@@ -11,17 +11,23 @@ import {
   Trophy,
   Settings,
   HelpCircle,
+  Award,
+  Users,
+  Headphones,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/modules", label: "Training Modules", icon: BookOpen },
   { href: "/progress", label: "My Progress", icon: Trophy },
+  { href: "/certificates", label: "Certificates", icon: Award },
   { href: "/admin", label: "Metrics", icon: BarChart3 },
+  { href: "/admin/users", label: "User Management", icon: Users },
 ];
 
 const bottomNavItems = [
-  { href: "/help", label: "Help & Support", icon: HelpCircle },
+  { href: "/support", label: "Support", icon: Headphones },
+  { href: "/help", label: "Help & FAQs", icon: HelpCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Sidebar } from "@/components/training/sidebar";
 import { mockMetrics } from "@/lib/training-data";
 import {
@@ -8,13 +9,23 @@ import {
   Target,
   AlertTriangle,
   TrendingUp,
+  TrendingDown,
   Shield,
   CheckCircle2,
   XCircle,
+  Calendar,
+  Download,
+  Filter,
+  ChevronRight,
+  Clock,
+  Award,
+  Mail,
+  Eye,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import {
   Bar,
   BarChart,
@@ -28,6 +39,10 @@ import {
   Cell,
   Pie,
   PieChart,
+  Area,
+  AreaChart,
+  RadialBarChart,
+  RadialBar,
 } from "recharts";
 import {
   ChartContainer,
@@ -36,19 +51,77 @@ import {
 } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 
-// Define colors for charts - must be actual color values, not CSS variables
 const CHART_COLORS = {
   primary: "#4ade80",
   secondary: "#60a5fa",
   muted: "#6b7280",
   accent: "#f472b6",
   warning: "#fbbf24",
+  destructive: "#ef4444",
 };
 
+// Additional mock data for enhanced analytics
+const weeklyActivity = [
+  { day: "Mon", logins: 180, completions: 45, quizzes: 32 },
+  { day: "Tue", logins: 210, completions: 62, quizzes: 48 },
+  { day: "Wed", logins: 195, completions: 58, quizzes: 41 },
+  { day: "Thu", logins: 225, completions: 71, quizzes: 55 },
+  { day: "Fri", logins: 185, completions: 48, quizzes: 38 },
+  { day: "Sat", logins: 45, completions: 12, quizzes: 8 },
+  { day: "Sun", logins: 32, completions: 8, quizzes: 5 },
+];
+
+const topPerformers = [
+  { name: "Sarah Chen", department: "Finance", score: 98, modules: 8 },
+  { name: "Michael Roberts", department: "HR", score: 96, modules: 7 },
+  { name: "Emily Davis", department: "Operations", score: 95, modules: 8 },
+  { name: "James Wilson", department: "Sales", score: 94, modules: 6 },
+  { name: "Amanda Lee", department: "Finance", score: 93, modules: 7 },
+];
+
+const recentActivity = [
+  { user: "John Smith", action: "Completed Phishing module", time: "5 min ago", type: "completion" },
+  { user: "Lisa Brown", action: "Started Password Security", time: "12 min ago", type: "start" },
+  { user: "Mark Johnson", action: "Failed quiz attempt", time: "25 min ago", type: "fail" },
+  { user: "Sarah Chen", action: "Earned certificate", time: "1 hour ago", type: "certificate" },
+  { user: "Tom Wilson", action: "Completed Data Protection", time: "2 hours ago", type: "completion" },
+];
+
+const moduleCompletionRates = [
+  { name: "Phishing", completion: 85, target: 90 },
+  { name: "Password Security", completion: 78, target: 85 },
+  { name: "Data Protection", completion: 72, target: 80 },
+  { name: "Incident Response", completion: 65, target: 75 },
+  { name: "Access Control", completion: 58, target: 70 },
+];
+
+const complianceData = [
+  { name: "Compliant", value: 186, fill: CHART_COLORS.primary },
+  { name: "In Progress", value: 45, fill: CHART_COLORS.secondary },
+  { name: "Overdue", value: 16, fill: CHART_COLORS.destructive },
+];
+
 export default function AdminMetricsPage() {
+  const [dateRange, setDateRange] = useState("30d");
+  
   const completionRate = Math.round(
     (mockMetrics.completedTraining / mockMetrics.totalEmployees) * 100
   );
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "completion":
+        return <CheckCircle2 className="h-4 w-4 text-primary" />;
+      case "start":
+        return <Eye className="h-4 w-4 text-chart-2" />;
+      case "fail":
+        return <XCircle className="h-4 w-4 text-destructive" />;
+      case "certificate":
+        return <Award className="h-4 w-4 text-chart-4" />;
+      default:
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,9 +140,28 @@ export default function AdminMetricsPage() {
                   Organization-wide training analytics and security posture.
                 </p>
               </div>
-              <Badge variant="secondary" className="px-3 py-1">
-                Last updated: Today
-              </Badge>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 rounded-lg bg-secondary p-1">
+                  {["7d", "30d", "90d", "1y"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setDateRange(range)}
+                      className={cn(
+                        "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                        dateRange === range
+                          ? "bg-background text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+                <Button variant="outline" className="border-border">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -85,8 +177,9 @@ export default function AdminMetricsPage() {
                     <p className="mt-2 text-3xl font-bold text-card-foreground">
                       {mockMetrics.totalEmployees}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Enrolled in training
+                    <p className="mt-1 text-sm text-primary flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      +12 this month
                     </p>
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -150,8 +243,9 @@ export default function AdminMetricsPage() {
                     <p className="mt-2 text-3xl font-bold text-card-foreground">
                       {mockMetrics.phishingTestPassRate}%
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {mockMetrics.incidentReports} incidents reported
+                    <p className="mt-1 text-sm text-destructive flex items-center gap-1">
+                      <TrendingDown className="h-3 w-3" />
+                      -2% vs last month
                     </p>
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
@@ -162,14 +256,15 @@ export default function AdminMetricsPage() {
             </Card>
           </div>
 
-          {/* Charts Row */}
+          {/* Charts Row 1 */}
           <div className="grid gap-6 lg:grid-cols-2 mb-6">
             {/* Training Progress Over Time */}
             <Card className="border-border bg-card">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-card-foreground">
                   Training Progress Over Time
                 </CardTitle>
+                <Badge variant="secondary">Monthly</Badge>
               </CardHeader>
               <CardContent>
                 <ChartContainer
@@ -186,7 +281,7 @@ export default function AdminMetricsPage() {
                   className="h-[300px]"
                 >
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
+                    <AreaChart
                       data={mockMetrics.monthlyProgress}
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
@@ -195,30 +290,69 @@ export default function AdminMetricsPage() {
                       <YAxis stroke="#9ca3af" />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="completed"
-                        stroke={CHART_COLORS.primary}
-                        strokeWidth={2}
-                        dot={{ fill: CHART_COLORS.primary }}
-                        name="Completed"
-                      />
-                      <Line
+                      <Area
                         type="monotone"
                         dataKey="enrolled"
                         stroke={CHART_COLORS.secondary}
-                        strokeWidth={2}
-                        dot={{ fill: CHART_COLORS.secondary }}
+                        fill={CHART_COLORS.secondary}
+                        fillOpacity={0.2}
                         name="Enrolled"
                       />
-                    </LineChart>
+                      <Area
+                        type="monotone"
+                        dataKey="completed"
+                        stroke={CHART_COLORS.primary}
+                        fill={CHART_COLORS.primary}
+                        fillOpacity={0.4}
+                        name="Completed"
+                      />
+                    </AreaChart>
                   </ResponsiveContainer>
                 </ChartContainer>
               </CardContent>
             </Card>
 
-            {/* Department Performance */}
+            {/* Weekly Activity */}
             <Card className="border-border bg-card">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-card-foreground">
+                  Weekly Activity
+                </CardTitle>
+                <Badge variant="secondary">This Week</Badge>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    logins: { label: "Logins", color: CHART_COLORS.secondary },
+                    completions: { label: "Completions", color: CHART_COLORS.primary },
+                    quizzes: { label: "Quizzes", color: CHART_COLORS.accent },
+                  }}
+                  className="h-[300px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={weeklyActivity}
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="day" stroke="#9ca3af" />
+                      <YAxis stroke="#9ca3af" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend />
+                      <Bar dataKey="logins" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} name="Logins" />
+                      <Bar dataKey="completions" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} name="Completions" />
+                      <Bar dataKey="quizzes" fill={CHART_COLORS.accent} radius={[4, 4, 0, 0]} name="Quizzes" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts Row 2 */}
+          <div className="grid gap-6 lg:grid-cols-3 mb-6">
+            {/* Department Performance */}
+            <Card className="border-border bg-card lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-card-foreground">
                   Department Performance
@@ -263,6 +397,165 @@ export default function AdminMetricsPage() {
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
+              </CardContent>
+            </Card>
+
+            {/* Compliance Status */}
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="text-card-foreground">
+                  Compliance Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    value: { label: "Employees" },
+                  }}
+                  className="h-[200px]"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={complianceData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey="value"
+                      >
+                        {complianceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+
+                <div className="mt-4 space-y-2">
+                  {complianceData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-3 w-3 rounded-full"
+                          style={{ backgroundColor: item.fill }}
+                        />
+                        <span className="text-muted-foreground">{item.name}</span>
+                      </div>
+                      <span className="font-medium text-card-foreground">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Module Completion & Top Performers */}
+          <div className="grid gap-6 lg:grid-cols-3 mb-6">
+            {/* Module Completion Rates */}
+            <Card className="border-border bg-card lg:col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-card-foreground">
+                  Module Completion Rates
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="text-primary">
+                  View All
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {moduleCompletionRates.map((module) => (
+                  <div key={module.name} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-card-foreground">
+                        {module.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "text-sm font-medium",
+                            module.completion >= module.target
+                              ? "text-primary"
+                              : module.completion >= module.target - 10
+                                ? "text-warning"
+                                : "text-destructive"
+                          )}
+                        >
+                          {module.completion}%
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          / {module.target}% target
+                        </span>
+                        {module.completion >= module.target ? (
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-warning" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-all",
+                          module.completion >= module.target
+                            ? "bg-primary"
+                            : "bg-warning"
+                        )}
+                        style={{ width: `${module.completion}%` }}
+                      />
+                      <div
+                        className="absolute top-0 h-full w-0.5 bg-foreground/50"
+                        style={{ left: `${module.target}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Top Performers */}
+            <Card className="border-border bg-card">
+              <CardHeader>
+                <CardTitle className="text-card-foreground flex items-center gap-2">
+                  <Award className="h-5 w-5 text-primary" />
+                  Top Performers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {topPerformers.map((performer, index) => (
+                  <div
+                    key={performer.name}
+                    className="flex items-center gap-3 rounded-lg bg-secondary/30 p-3"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold",
+                        index === 0
+                          ? "bg-chart-4/20 text-chart-4"
+                          : index === 1
+                            ? "bg-secondary text-foreground"
+                            : index === 2
+                              ? "bg-chart-4/10 text-chart-4/80"
+                              : "bg-secondary text-muted-foreground"
+                      )}
+                    >
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-card-foreground truncate">
+                        {performer.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {performer.department} - {performer.modules} modules
+                      </p>
+                    </div>
+                    <span className="text-sm font-bold text-primary">
+                      {performer.score}%
+                    </span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
@@ -340,89 +633,40 @@ export default function AdminMetricsPage() {
               </CardContent>
             </Card>
 
-            {/* Risk Assessment */}
+            {/* Recent Activity Feed */}
             <Card className="border-border bg-card">
               <CardHeader>
                 <CardTitle className="text-card-foreground">
-                  Risk Assessment
+                  Recent Activity
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    value: {
-                      label: "Risk Level",
-                    },
-                  }}
-                  className="h-[200px]"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: "Low Risk", value: 65, fill: CHART_COLORS.primary },
-                          { name: "Medium Risk", value: 25, fill: CHART_COLORS.warning },
-                          { name: "High Risk", value: 10, fill: "#ef4444" },
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {[
-                          { name: "Low Risk", value: 65, fill: CHART_COLORS.primary },
-                          { name: "Medium Risk", value: 25, fill: CHART_COLORS.warning },
-                          { name: "High Risk", value: 10, fill: "#ef4444" },
-                        ].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+              <CardContent className="space-y-4">
+                {recentActivity.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-card-foreground">
+                        <span className="font-medium">{activity.user}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {activity.action}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {activity.time}
+                      </p>
+                    </div>
+                  </div>
+                ))}
 
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: CHART_COLORS.primary }}
-                      />
-                      <span className="text-muted-foreground">Low Risk</span>
-                    </div>
-                    <span className="font-medium text-card-foreground">65%</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: CHART_COLORS.warning }}
-                      />
-                      <span className="text-muted-foreground">Medium Risk</span>
-                    </div>
-                    <span className="font-medium text-card-foreground">25%</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{ backgroundColor: "#ef4444" }}
-                      />
-                      <span className="text-muted-foreground">High Risk</span>
-                    </div>
-                    <span className="font-medium text-card-foreground">10%</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Overall security posture has improved compared to last
-                    quarter. Continue focus on high-risk departments.
-                  </p>
-                </div>
+                <Button variant="ghost" size="sm" className="w-full text-primary">
+                  View All Activity
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
               </CardContent>
             </Card>
           </div>
