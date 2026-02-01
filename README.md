@@ -87,4 +87,19 @@ The effectiveness of the training is measured using:
 ---
 
 ## Repository Structure
+cybersecurity-training-program/
+├── app/ # Next.js app router pages and layouts
+├── components/ # Reusable UI components
+├── lib/ # Utility functions and shared logic
+├── public/ # Static assets
+├── styles/ # Global and component styles
+├── .gitignore
+├── README.md
+├── package.json
+├── next.config.mjs
+├── tsconfig.json
+├── postcss.config.mjs
+├── components.json
+├── bun.lock
+├── pnpm-lock.yaml
 
