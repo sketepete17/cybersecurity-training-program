@@ -3,31 +3,53 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Shield, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import {
+  Shield,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth, UserRole } from "@/lib/auth-context";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("user");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    // Simulate login - in production, this would call an auth API
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (email && password) {
-      router.push("/");
-    } else {
+    if (!email || !password) {
       setError("Please enter your email and password");
+      setIsLoading(false);
+      return;
+    }
+
+    const success = await login(email, password, selectedRole);
+
+    if (success) {
+      // Redirect based on role
+      if (selectedRole === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
+    } else {
+      setError("Invalid credentials. Please try again.");
     }
 
     setIsLoading(false);
@@ -60,27 +82,19 @@ export default function LoginPage() {
           <div className="grid grid-cols-2 gap-4 pt-6">
             <div className="rounded-lg bg-secondary/50 p-4">
               <p className="text-3xl font-bold text-primary">98%</p>
-              <p className="text-sm text-muted-foreground">
-                Completion Rate
-              </p>
+              <p className="text-sm text-muted-foreground">Completion Rate</p>
             </div>
             <div className="rounded-lg bg-secondary/50 p-4">
               <p className="text-3xl font-bold text-primary">50+</p>
-              <p className="text-sm text-muted-foreground">
-                Training Modules
-              </p>
+              <p className="text-sm text-muted-foreground">Training Modules</p>
             </div>
             <div className="rounded-lg bg-secondary/50 p-4">
               <p className="text-3xl font-bold text-primary">10k+</p>
-              <p className="text-sm text-muted-foreground">
-                Users Trained
-              </p>
+              <p className="text-sm text-muted-foreground">Users Trained</p>
             </div>
             <div className="rounded-lg bg-secondary/50 p-4">
               <p className="text-3xl font-bold text-primary">85%</p>
-              <p className="text-sm text-muted-foreground">
-                Threat Reduction
-              </p>
+              <p className="text-sm text-muted-foreground">Threat Reduction</p>
             </div>
           </div>
         </div>
@@ -119,6 +133,78 @@ export default function LoginPage() {
               )}
             </CardHeader>
             <CardContent className="pt-6">
+              {/* Role Selection */}
+              <div className="mb-6">
+                <label className="text-sm font-medium text-foreground block mb-3">
+                  Select your role
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole("user")}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                      selectedRole === "user"
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/30 hover:border-muted-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                        selectedRole === "user"
+                          ? "bg-primary/20 text-primary"
+                          : "bg-secondary text-muted-foreground"
+                      }`}
+                    >
+                      <User className="h-6 w-6" />
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        selectedRole === "user"
+                          ? "text-primary"
+                          : "text-foreground"
+                      }`}
+                    >
+                      Employee
+                    </span>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Access training modules
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRole("admin")}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                      selectedRole === "admin"
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-secondary/30 hover:border-muted-foreground"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                        selectedRole === "admin"
+                          ? "bg-primary/20 text-primary"
+                          : "bg-secondary text-muted-foreground"
+                      }`}
+                    >
+                      <ShieldCheck className="h-6 w-6" />
+                    </div>
+                    <span
+                      className={`text-sm font-medium ${
+                        selectedRole === "admin"
+                          ? "text-primary"
+                          : "text-foreground"
+                      }`}
+                    >
+                      Administrator
+                    </span>
+                    <span className="text-xs text-muted-foreground text-center">
+                      Manage users & metrics
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <label
@@ -132,7 +218,11 @@ export default function LoginPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@company.com"
+                      placeholder={
+                        selectedRole === "admin"
+                          ? "admin@company.com"
+                          : "you@company.com"
+                      }
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10 bg-input border-border text-foreground placeholder:text-muted-foreground"
@@ -207,7 +297,8 @@ export default function LoginPage() {
                     "Signing in..."
                   ) : (
                     <>
-                      Sign in
+                      Sign in as{" "}
+                      {selectedRole === "admin" ? "Administrator" : "Employee"}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -262,6 +353,25 @@ export default function LoginPage() {
                   </svg>
                   Microsoft
                 </Button>
+              </div>
+
+              {/* Demo Credentials */}
+              <div className="mt-6 rounded-lg bg-secondary/50 p-4">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  Demo Credentials:
+                </p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p>
+                    <span className="font-medium text-foreground">
+                      Employee:
+                    </span>{" "}
+                    user@company.com / any password
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Admin:</span>{" "}
+                    admin@company.com / any password
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
