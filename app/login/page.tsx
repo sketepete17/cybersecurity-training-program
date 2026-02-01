@@ -365,13 +365,16 @@ export default function LoginPage() {
                     <span className="font-medium text-foreground">
                       Employee:
                     </span>{" "}
-                    user@company.com / any password
+                    user@company.com / user123
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Admin:</span>{" "}
-                    admin@company.com / any password
+                    admin@company.com / admin123
                   </p>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2 italic">
+                  Note: Each account only works with its matching role selection.
+                </p>
               </div>
             </CardContent>
           </Card>
