@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   User,
   Bell,
@@ -33,6 +34,7 @@ const settingsSections = [
 ];
 
 export default function SettingsPage() {
+  const { addToast } = useToast();
   const [activeSection, setActiveSection] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -59,6 +61,49 @@ export default function SettingsPage() {
     setIsSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsSaving(false);
+    addToast("Settings saved successfully!", "success");
+  };
+
+  const handleChangePassword = () => {
+    addToast("Password change dialog opening...", "info");
+    setTimeout(() => {
+      addToast("Please check your email for password reset instructions", "success");
+    }, 1500);
+  };
+
+  const handleManage2FA = () => {
+    addToast("Two-factor authentication settings opening...", "info");
+  };
+
+  const handleViewSessions = () => {
+    addToast("Loading active sessions...", "info");
+    setTimeout(() => {
+      addToast("You have 2 active sessions: Chrome (Windows) and Safari (iPhone)", "info");
+    }, 1000);
+  };
+
+  const handleSignOutAll = () => {
+    addToast("Signing out from all devices...", "info");
+    setTimeout(() => {
+      addToast("Signed out from all other devices", "success");
+    }, 1500);
+  };
+
+  const handleChangeAvatar = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        if (file.size > 2 * 1024 * 1024) {
+          addToast("File size exceeds 2MB limit", "error");
+        } else {
+          addToast(`Profile photo "${file.name}" uploaded successfully!`, "success");
+        }
+      }
+    };
+    input.click();
   };
 
   const renderContent = () => {
@@ -81,7 +126,10 @@ export default function SettingsPage() {
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 text-2xl font-semibold text-primary">
                   JD
                 </div>
-                <button className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <button 
+                  onClick={handleChangeAvatar}
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
                   <Camera className="h-4 w-4" />
                   <span className="sr-only">Change avatar</span>
                 </button>
@@ -303,7 +351,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="border-border">
+                    <Button variant="outline" size="sm" className="border-border" onClick={handleChangePassword}>
                       Change
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -332,7 +380,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="border-border">
+                    <Button variant="outline" size="sm" className="border-border" onClick={handleManage2FA}>
                       Manage
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -354,7 +402,7 @@ export default function SettingsPage() {
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="border-border">
+                    <Button variant="outline" size="sm" className="border-border" onClick={handleViewSessions}>
                       View All
                       <ChevronRight className="ml-1 h-4 w-4" />
                     </Button>
@@ -364,7 +412,11 @@ export default function SettingsPage() {
             </div>
 
             <div className="pt-4 border-t border-border">
-              <Button variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10">
+              <Button 
+                variant="outline" 
+                className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                onClick={handleSignOutAll}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out of all devices
               </Button>

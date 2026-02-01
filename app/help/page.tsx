@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/training/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   Search,
   BookOpen,
@@ -119,8 +121,58 @@ const faqs = [
 ];
 
 export default function HelpPage() {
+  const router = useRouter();
+  const { addToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [searchResults, setSearchResults] = useState<typeof popularArticles | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim().length > 2) {
+      // Filter articles based on search
+      const results = popularArticles.filter(
+        (article) =>
+          article.title.toLowerCase().includes(query.toLowerCase()) ||
+          article.category.toLowerCase().includes(query.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults(null);
+    }
+  };
+
+  const handleArticleClick = (article: typeof popularArticles[0]) => {
+    addToast(`Opening article: "${article.title}"`, "info");
+    // In a real app, this would navigate to the article
+  };
+
+  const handleCategoryClick = (category: typeof categories[0]) => {
+    setSelectedCategory(category.id);
+    addToast(`Browsing ${category.label} articles`, "info");
+    // Filter or navigate to category
+  };
+
+  const handleLiveChat = () => {
+    addToast("Connecting to live chat support...", "info");
+    setTimeout(() => {
+      addToast("Live chat is currently available. A support agent will be with you shortly.", "success");
+    }, 1500);
+  };
+
+  const handleEmailSupport = () => {
+    addToast("Opening email client...", "info");
+    window.location.href = "mailto:support@cybershield.app?subject=Support%20Request";
+  };
+
+  const handlePhoneSupport = () => {
+    addToast("Phone support: 1-800-CYBER-SHIELD", "info");
+  };
+
+  const handleSubmitTicket = () => {
+    router.push("/support");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,9 +196,35 @@ export default function HelpPage() {
                   type="search"
                   placeholder="Search for articles, guides, and more..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   className="pl-12 py-6 text-base bg-input border-border text-foreground placeholder:text-muted-foreground"
                 />
+                
+                {/* Search Results Dropdown */}
+                {searchResults && searchResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-border bg-card shadow-lg z-10">
+                    {searchResults.map((article, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          handleArticleClick(article);
+                          setSearchQuery("");
+                          setSearchResults(null);
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-secondary/50 transition-colors first:rounded-t-lg last:rounded-b-lg"
+                      >
+                        <p className="font-medium text-foreground">{article.title}</p>
+                        <p className="text-sm text-muted-foreground">{article.category}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {searchResults && searchResults.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 rounded-lg border border-border bg-card shadow-lg p-4 text-center z-10">
+                    <p className="text-muted-foreground">No results found for "{searchQuery}"</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -160,11 +238,18 @@ export default function HelpPage() {
               {categories.map((category) => (
                 <Card
                   key={category.id}
-                  className="border-border bg-card hover:bg-secondary/50 transition-colors cursor-pointer group"
+                  onClick={() => handleCategoryClick(category)}
+                  className={`border-border bg-card hover:bg-secondary/50 transition-colors cursor-pointer group ${
+                    selectedCategory === category.id ? "border-primary bg-primary/5" : ""
+                  }`}
                 >
                   <CardContent className="p-5">
                     <div className="flex flex-col items-center text-center">
-                      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-lg transition-colors ${
+                        selectedCategory === category.id
+                          ? "bg-primary/20"
+                          : "bg-primary/10 group-hover:bg-primary/20"
+                      }`}>
                         <category.icon className="h-6 w-6 text-primary" />
                       </div>
                       <h3 className="font-medium text-foreground mb-1">
@@ -196,6 +281,7 @@ export default function HelpPage() {
                     {popularArticles.map((article, index) => (
                       <button
                         key={index}
+                        onClick={() => handleArticleClick(article)}
                         className="w-full flex items-center justify-between rounded-lg p-3 hover:bg-secondary/50 transition-colors group text-left"
                       >
                         <div className="flex-1 min-w-0">
@@ -280,7 +366,10 @@ export default function HelpPage() {
                   </p>
 
                   <div className="space-y-3">
-                    <button className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group">
+                    <button 
+                      onClick={handleLiveChat}
+                      className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group"
+                    >
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                         <MessageCircle className="h-5 w-5 text-primary" />
                       </div>
@@ -293,7 +382,10 @@ export default function HelpPage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
                     </button>
 
-                    <button className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group">
+                    <button 
+                      onClick={handleEmailSupport}
+                      className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group"
+                    >
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                         <Mail className="h-5 w-5 text-primary" />
                       </div>
@@ -308,7 +400,10 @@ export default function HelpPage() {
                       <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto group-hover:text-primary transition-colors" />
                     </button>
 
-                    <button className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group">
+                    <button 
+                      onClick={handlePhoneSupport}
+                      className="w-full flex items-center gap-3 rounded-lg bg-secondary/50 p-4 hover:bg-secondary transition-colors group"
+                    >
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                         <Phone className="h-5 w-5 text-primary" />
                       </div>
@@ -339,7 +434,10 @@ export default function HelpPage() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Submit a support ticket and our team will get back to you.
                     </p>
-                    <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                    <Button 
+                      onClick={handleSubmitTicket}
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    >
                       Submit a Ticket
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </Button>
