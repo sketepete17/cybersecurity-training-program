@@ -33,8 +33,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Demo users for simulation
-const demoUsers: Record<string, User> = {
+// Demo users for simulation with passwords
+const demoUsers: Record<string, User & { password: string }> = {
   "admin@company.com": {
     id: "admin-001",
     email: "admin@company.com",
@@ -43,6 +43,7 @@ const demoUsers: Record<string, User> = {
     role: "admin",
     department: "IT Security",
     jobTitle: "Security Administrator",
+    password: "admin123",
   },
   "user@company.com": {
     id: "user-001",
@@ -52,6 +53,7 @@ const demoUsers: Record<string, User> = {
     role: "user",
     department: "Finance",
     jobTitle: "Financial Analyst",
+    password: "user123",
   },
 };
 
@@ -121,19 +123,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // For demo, accept any email/password and use provided role
-    const userData: User = demoUsers[email] || {
-      id: `user-${Date.now()}`,
-      email,
-      firstName: email.split("@")[0],
-      lastName: "User",
-      role,
-      department: role === "admin" ? "IT Security" : "General",
-      jobTitle: role === "admin" ? "Administrator" : "Employee",
-    };
+    // Check if user exists in demo users
+    const demoUser = demoUsers[email.toLowerCase()];
+    
+    if (!demoUser) {
+      // User not found
+      return false;
+    }
 
-    // Override role based on selection for demo
-    userData.role = role;
+    // Verify password
+    if (demoUser.password !== password) {
+      return false;
+    }
+
+    // Verify role matches - admin can't login as employee, employee can't login as admin
+    if (demoUser.role !== role) {
+      return false;
+    }
+
+    // Create user data without password
+    const userData: User = {
+      id: demoUser.id,
+      email: demoUser.email,
+      firstName: demoUser.firstName,
+      lastName: demoUser.lastName,
+      role: demoUser.role,
+      department: demoUser.department,
+      jobTitle: demoUser.jobTitle,
+    };
 
     setUser(userData);
     localStorage.setItem("cybershield_user", JSON.stringify(userData));
