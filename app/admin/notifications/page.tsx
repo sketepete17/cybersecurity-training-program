@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/toast";
 import {
   Bell,
   Send,
@@ -24,6 +25,7 @@ import {
   Edit,
   Eye,
   Copy,
+  X,
 } from "lucide-react";
 
 const notifications = [
@@ -109,10 +111,62 @@ const templates = [
 ];
 
 export default function NotificationsPage() {
+  const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState<"all" | "scheduled" | "drafts">(
     "all"
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newNotification, setNewNotification] = useState({
+    title: "",
+    message: "",
+    type: "announcement",
+    audience: "All Users",
+  });
+
+  const handleCreateNotification = () => {
+    if (!newNotification.title.trim() || !newNotification.message.trim()) {
+      addToast("Please fill in all required fields", "error");
+      return;
+    }
+    addToast(`Notification "${newNotification.title}" created and sent!`, "success");
+    setShowCreateModal(false);
+    setNewNotification({ title: "", message: "", type: "announcement", audience: "All Users" });
+  };
+
+  const handleCopyNotification = (notification: typeof notifications[0]) => {
+    addToast(`Notification "${notification.title}" copied to draft`, "success");
+  };
+
+  const handleEditNotification = (notification: typeof notifications[0]) => {
+    setNewNotification({
+      title: notification.title,
+      message: notification.message,
+      type: notification.type,
+      audience: notification.audience,
+    });
+    setShowCreateModal(true);
+    addToast(`Editing "${notification.title}"`, "info");
+  };
+
+  const handleDeleteNotification = (notification: typeof notifications[0]) => {
+    addToast(`Notification "${notification.title}" deleted`, "success");
+  };
+
+  const handleUseTemplate = (template: typeof templates[0]) => {
+    setNewNotification({
+      ...newNotification,
+      title: template.name,
+      message: template.description,
+    });
+    setShowCreateModal(true);
+    addToast(`Template "${template.name}" loaded`, "info");
+  };
+
+  const handleSelectAudience = (audience: string) => {
+    setNewNotification({ ...newNotification, audience });
+    addToast(`Audience set to "${audience}"`, "info");
+  };
 
   const filteredNotifications = notifications.filter((n) => {
     if (activeTab === "scheduled") return n.status === "scheduled";
@@ -170,7 +224,10 @@ export default function NotificationsPage() {
                 Send and manage notifications to users across the organization.
               </p>
             </div>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button 
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => setShowCreateModal(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Create Notification
             </Button>
@@ -371,14 +428,16 @@ export default function NotificationsPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-muted-foreground"
+                            className="text-muted-foreground hover:text-primary"
+                            onClick={() => handleCopyNotification(notification)}
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-muted-foreground"
+                            className="text-muted-foreground hover:text-primary"
+                            onClick={() => handleEditNotification(notification)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -386,6 +445,7 @@ export default function NotificationsPage() {
                             variant="ghost"
                             size="sm"
                             className="text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDeleteNotification(notification)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -409,6 +469,7 @@ export default function NotificationsPage() {
                   {templates.map((template) => (
                     <button
                       key={template.id}
+                      onClick={() => handleUseTemplate(template)}
                       className="w-full p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors text-left"
                     >
                       <p className="font-medium text-foreground">
@@ -422,6 +483,7 @@ export default function NotificationsPage() {
                   <Button
                     variant="outline"
                     className="w-full border-border mt-4"
+                    onClick={() => addToast("Template builder coming soon!", "info")}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     Create Template
@@ -444,9 +506,10 @@ export default function NotificationsPage() {
                     { name: "Overdue Training", count: 45 },
                     { name: "Expiring Certs", count: 23 },
                   ].map((group) => (
-                    <div
+                    <button
                       key={group.name}
-                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/30"
+                      onClick={() => handleSelectAudience(group.name)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
                     >
                       <span className="text-sm text-foreground">
                         {group.name}
@@ -454,7 +517,7 @@ export default function NotificationsPage() {
                       <Badge className="bg-secondary text-muted-foreground border-0">
                         {group.count}
                       </Badge>
-                    </div>
+                    </button>
                   ))}
                 </CardContent>
               </Card>
@@ -462,6 +525,98 @@ export default function NotificationsPage() {
           </div>
         </div>
       </main>
+
+      {/* Create Notification Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-lg border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">Create Notification</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowCreateModal(false)}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Title</label>
+                <Input
+                  placeholder="Notification title..."
+                  value={newNotification.title}
+                  onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Message</label>
+                <textarea
+                  placeholder="Write your notification message..."
+                  value={newNotification.message}
+                  onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Type</label>
+                  <select
+                    value={newNotification.type}
+                    onChange={(e) => setNewNotification({ ...newNotification, type: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="announcement">Announcement</option>
+                    <option value="reminder">Reminder</option>
+                    <option value="alert">Alert</option>
+                    <option value="warning">Warning</option>
+                    <option value="summary">Summary</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Audience</label>
+                  <select
+                    value={newNotification.audience}
+                    onChange={(e) => setNewNotification({ ...newNotification, audience: e.target.value })}
+                    className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="All Users">All Users</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Sales">Sales</option>
+                    <option value="New Employees">New Employees</option>
+                    <option value="Overdue Training">Overdue Training</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => {
+                    addToast("Notification saved as draft", "success");
+                    setShowCreateModal(false);
+                  }}
+                >
+                  Save as Draft
+                </Button>
+                <Button
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleCreateNotification}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Send Now
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
