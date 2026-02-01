@@ -73,44 +73,103 @@ export default function CertificatesPage() {
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState<string | null>(null);
 
-  const handleDownload = async (cert: Certificate, format: "pdf" | "png" = "pdf") => {
+  const handleDownload = async (cert: Certificate) => {
     setIsDownloading(cert.id);
     
     // Simulate download generation
     await new Promise((resolve) => setTimeout(resolve, 1500));
     
-    // Create a demo certificate content
-    const certContent = `
-CERTIFICATE OF COMPLETION
-
-This is to certify that
-
-Jane Doe
-
-has successfully completed the training module
-
-${cert.moduleTitle}
-
-Score: ${cert.score}%
-Issue Date: ${cert.issueDate}
-Credential ID: ${cert.credentialId}
-
-CyberShield Security Training Platform
-    `.trim();
+    // Create a canvas to generate PNG certificate
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 600;
+    const ctx = canvas.getContext("2d");
     
-    // Create and download the file
-    const blob = new Blob([certContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `certificate-${cert.credentialId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    if (ctx) {
+      // Background
+      ctx.fillStyle = "#0a0a0a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Border
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+      
+      // Inner border
+      ctx.strokeStyle = "#10b98140";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+      
+      // Title
+      ctx.fillStyle = "#10b981";
+      ctx.font = "bold 36px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("CERTIFICATE OF COMPLETION", canvas.width / 2, 120);
+      
+      // Shield icon (simple representation)
+      ctx.fillStyle = "#10b98130";
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 150);
+      ctx.lineTo(canvas.width / 2 + 40, 170);
+      ctx.lineTo(canvas.width / 2 + 40, 210);
+      ctx.lineTo(canvas.width / 2, 240);
+      ctx.lineTo(canvas.width / 2 - 40, 210);
+      ctx.lineTo(canvas.width / 2 - 40, 170);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Certifies text
+      ctx.fillStyle = "#a1a1aa";
+      ctx.font = "18px Arial";
+      ctx.fillText("This is to certify that", canvas.width / 2, 280);
+      
+      // Name
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 32px Arial";
+      ctx.fillText("Jane Doe", canvas.width / 2, 330);
+      
+      // Has completed text
+      ctx.fillStyle = "#a1a1aa";
+      ctx.font = "18px Arial";
+      ctx.fillText("has successfully completed the training module", canvas.width / 2, 380);
+      
+      // Module title
+      ctx.fillStyle = "#10b981";
+      ctx.font = "bold 24px Arial";
+      ctx.fillText(cert.moduleTitle, canvas.width / 2, 420);
+      
+      // Score
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "20px Arial";
+      ctx.fillText(`Score: ${cert.score}%`, canvas.width / 2, 470);
+      
+      // Date and credential
+      ctx.fillStyle = "#a1a1aa";
+      ctx.font = "14px Arial";
+      ctx.fillText(`Issue Date: ${cert.issueDate}  |  Credential ID: ${cert.credentialId}`, canvas.width / 2, 520);
+      
+      // Footer
+      ctx.fillStyle = "#10b981";
+      ctx.font = "16px Arial";
+      ctx.fillText("CyberShield Security Training Platform", canvas.width / 2, 560);
+    }
+    
+    // Convert to PNG and download
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `certificate-${cert.credentialId}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }, "image/png");
     
     setIsDownloading(null);
-    addToast(`Certificate downloaded successfully!`, "success");
+    addToast(`Certificate downloaded as PNG!`, "success");
   };
 
   const handleShare = async (cert: Certificate) => {
@@ -442,7 +501,7 @@ CyberShield Security Training Platform
                         disabled={isDownloading === selectedCert.id}
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        {isDownloading === selectedCert.id ? "Generating..." : "Download PDF"}
+                        {isDownloading === selectedCert.id ? "Generating..." : "Download PNG"}
                       </Button>
                       <Button 
                         variant="outline" 

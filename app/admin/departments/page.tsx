@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/toast";
 import {
   Building2,
   Users,
@@ -22,6 +23,7 @@ import {
   Edit,
   Trash2,
   UserPlus,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -122,7 +124,40 @@ const departments = [
 ];
 
 export default function DepartmentsPage() {
+  const { addToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedDept, setSelectedDept] = useState<typeof departments[0] | null>(null);
+  const [newDeptName, setNewDeptName] = useState("");
+  const [newDeptHead, setNewDeptHead] = useState("");
+
+  const handleAddDepartment = () => {
+    if (!newDeptName.trim()) {
+      addToast("Please enter a department name", "error");
+      return;
+    }
+    addToast(`Department "${newDeptName}" created successfully!`, "success");
+    setShowAddModal(false);
+    setNewDeptName("");
+    setNewDeptHead("");
+  };
+
+  const handleEditDepartment = (dept: typeof departments[0]) => {
+    addToast(`Editing ${dept.name} department...`, "info");
+  };
+
+  const handleAddUsers = (dept: typeof departments[0]) => {
+    addToast(`Opening user assignment for ${dept.name}...`, "info");
+  };
+
+  const handleDeleteDepartment = (dept: typeof departments[0]) => {
+    addToast(`${dept.name} department deleted`, "success");
+  };
+
+  const handleViewDetails = (dept: typeof departments[0]) => {
+    setSelectedDept(dept);
+    addToast(`Viewing ${dept.name} details`, "info");
+  };
 
   const filteredDepartments = departments.filter((dept) =>
     dept.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -151,7 +186,10 @@ export default function DepartmentsPage() {
                 Manage departments and view training progress by team.
               </p>
             </div>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button 
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => setShowAddModal(true)}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Department
             </Button>
@@ -278,15 +316,24 @@ export default function DepartmentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-card border-border">
-                        <DropdownMenuItem className="text-foreground">
+                        <DropdownMenuItem 
+                          className="text-foreground cursor-pointer"
+                          onClick={() => handleEditDepartment(dept)}
+                        >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Department
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-foreground">
+                        <DropdownMenuItem 
+                          className="text-foreground cursor-pointer"
+                          onClick={() => handleAddUsers(dept)}
+                        >
                           <UserPlus className="mr-2 h-4 w-4" />
                           Add Users
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem 
+                          className="text-destructive cursor-pointer"
+                          onClick={() => handleDeleteDepartment(dept)}
+                        >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -352,6 +399,7 @@ export default function DepartmentsPage() {
                       variant="ghost"
                       size="sm"
                       className="text-primary hover:text-primary/80"
+                      onClick={() => handleViewDetails(dept)}
                     >
                       View Details
                       <ChevronRight className="ml-1 h-4 w-4" />
@@ -363,6 +411,143 @@ export default function DepartmentsPage() {
           </div>
         </div>
       </main>
+
+      {/* Add Department Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">Add New Department</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAddModal(false)}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Department Name
+                </label>
+                <Input
+                  placeholder="e.g., Product Development"
+                  value={newDeptName}
+                  onChange={(e) => setNewDeptName(e.target.value)}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Department Head
+                </label>
+                <Input
+                  placeholder="e.g., John Smith"
+                  value={newDeptHead}
+                  onChange={(e) => setNewDeptHead(e.target.value)}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleAddDepartment}
+                >
+                  Create Department
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Department Details Modal */}
+      {selectedDept && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-lg border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">{selectedDept.name} Department</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setSelectedDept(null)}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-secondary/30 p-4">
+                  <p className="text-sm text-muted-foreground">Department Head</p>
+                  <p className="text-lg font-semibold text-foreground">{selectedDept.head}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-4">
+                  <p className="text-sm text-muted-foreground">Total Users</p>
+                  <p className="text-lg font-semibold text-foreground">{selectedDept.userCount}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-4">
+                  <p className="text-sm text-muted-foreground">Avg Score</p>
+                  <p className="text-lg font-semibold text-primary">{selectedDept.avgScore}%</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-4">
+                  <p className="text-sm text-muted-foreground">Certified</p>
+                  <p className="text-lg font-semibold text-foreground">{selectedDept.certifications}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Completion Rate</span>
+                  <span className="font-medium text-foreground">{selectedDept.completionRate}%</span>
+                </div>
+                <Progress value={selectedDept.completionRate} className="h-3 bg-secondary" />
+              </div>
+
+              {selectedDept.overdue > 0 && (
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4">
+                  <p className="text-sm text-destructive font-medium">
+                    {selectedDept.overdue} users have overdue training
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => {
+                    handleAddUsers(selectedDept);
+                    setSelectedDept(null);
+                  }}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add Users
+                </Button>
+                <Button
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => {
+                    handleEditDepartment(selectedDept);
+                    setSelectedDept(null);
+                  }}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Department
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
