@@ -1,30 +1,90 @@
-# Help, settings, login
+# Cybersecurity Awareness Training Program
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+A web-based, scenario-driven cybersecurity awareness training program designed for non-technical users.  
+This project focuses on helping individuals recognize, avoid, and respond to common cyber threats through realistic browser-based scenarios and practical decision-making exercises.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/jjj44412-9712s-projects/v0-cybersecurity-training-program)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/zUzcXBEWOGS)
+---
 
-## Overview
+## Project Goal
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+The goal of this project is to reduce human-related cybersecurity risk by improving user awareness in a way that is:
 
-## Deployment
+- Easy to understand without a technical background
+- Interactive and scenario-based
+- Focused on real-world attacks commonly seen in organizations
 
-Your project is live at:
+This training program can be adapted for:
+- Corporate employees
+- Small and mid-sized businesses
+- Students and entry-level professionals
+- General cybersecurity awareness education
 
-**[https://vercel.com/jjj44412-9712s-projects/v0-cybersecurity-training-program](https://vercel.com/jjj44412-9712s-projects/v0-cybersecurity-training-program)**
+---
 
-## Build your app
+## Key Topics Covered
 
-Continue building your app on:
+- Phishing and social engineering
+- Business Email Compromise (BEC)
+- Password hygiene and multi-factor authentication (MFA)
+- Safe web and email practices
+- Data protection and privacy fundamentals
+- Incident awareness and reporting
 
-**[https://v0.app/chat/zUzcXBEWOGS](https://v0.app/chat/zUzcXBEWOGS)**
+---
 
-## How It Works
+## Training Structure
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+The training is delivered through short, focused, web-based modules that users complete directly in the browser.
+
+### Example Modules
+
+1. Introduction to Cyber Threats  
+   - Why attackers target people  
+   - Real-world breach examples  
+
+2. Phishing and Email Attacks  
+   - How phishing works  
+   - Common warning signs  
+   - Interactive phishing scenarios  
+
+3. Business Email Compromise (BEC)  
+   - CEO fraud  
+   - Invoice and payment redirection scams  
+   - Urgency and authority manipulation  
+
+4. Password and Account Security  
+   - Strong vs weak passwords  
+   - MFA explained in plain language  
+
+5. Safe Online Behavior  
+   - Secure browsing habits  
+   - Attachments and downloads  
+   - Public Wi-Fi risks  
+
+6. Reporting and Response  
+   - What to do after a suspicious action  
+   - Why early reporting matters  
+
+---
+
+## Tools and Technologies
+
+- HTML, CSS, JavaScript
+- Web-based interactive simulations
+- Scenario-driven decision flows
+- Quizzes and knowledge checks
+
+---
+
+## Success Metrics
+
+The effectiveness of the training is measured using:
+- Pre-training and post-training assessments
+- Scenario decision accuracy
+- User confidence feedback
+- Reduction in risky decision patterns
+
+---
+
+## Repository Structure
+
