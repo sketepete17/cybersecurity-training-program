@@ -19,7 +19,6 @@ import {
   Building2,
   FileText,
   Bell,
-  Database,
 } from "lucide-react";
 
 // User navigation items
@@ -53,10 +52,40 @@ const adminBottomNavItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isLoading } = useAuth();
 
   const navItems = isAdmin ? adminNavItems : userNavItems;
   const bottomNavItems = isAdmin ? adminBottomNavItems : userBottomNavItems;
+
+  // Show loading skeleton during auth check
+  if (isLoading) {
+    return (
+      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-sidebar">
+        <div className="flex h-full flex-col">
+          <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-semibold text-sidebar-foreground">
+                CyberShield
+              </span>
+            </div>
+          </div>
+          <div className="flex-1 px-3 py-4">
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-10 rounded-lg bg-sidebar-accent/50 animate-pulse"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-sidebar">
@@ -182,8 +211,8 @@ export function Sidebar() {
                     : "bg-primary/20 text-primary"
                 )}
               >
-                {user.firstName[0]}
-                {user.lastName[0]}
+                {user.firstName?.[0] || "U"}
+                {user.lastName?.[0] || ""}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="truncate text-sm font-medium text-sidebar-foreground">

@@ -56,7 +56,7 @@ const demoUsers: Record<string, User> = {
 };
 
 // Routes that require admin access
-const adminRoutes = ["/admin", "/admin/users", "/admin/settings"];
+const adminRoutes = ["/admin"];
 
 // Routes that are public (no auth required)
 const publicRoutes = ["/login", "/forgot-password"];
@@ -64,26 +64,34 @@ const publicRoutes = ["/login", "/forgot-password"];
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
+  // Handle mounting
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("cybershield_user");
-    if (storedUser) {
-      try {
+    if (!mounted) return;
+    
+    try {
+      const storedUser = localStorage.getItem("cybershield_user");
+      if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-      } catch {
-        localStorage.removeItem("cybershield_user");
       }
+    } catch {
+      localStorage.removeItem("cybershield_user");
     }
     setIsLoading(false);
-  }, []);
+  }, [mounted]);
 
   // Route protection
   useEffect(() => {
-    if (isLoading) return;
+    if (!mounted || isLoading) return;
 
     const isPublicRoute = publicRoutes.includes(pathname);
     const isAdminRoute = adminRoutes.some((route) =>
@@ -103,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user && pathname === "/login") {
       router.push(user.role === "admin" ? "/admin" : "/");
     }
-  }, [user, pathname, isLoading, router]);
+  }, [user, pathname, isLoading, router, mounted]);
 
   const login = async (
     email: string,
@@ -138,6 +146,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("cybershield_user");
     router.push("/login");
   };
+
+  // Show loading state during SSR and initial mount
+  if (!mounted) {
+    return (
+      <AuthContext.Provider
+        value={{
+          user: null,
+          isAuthenticated: false,
+          isLoading: true,
+          login: async () => false,
+          logout: () => {},
+          isAdmin: false,
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    );
+  }
 
   return (
     <AuthContext.Provider
