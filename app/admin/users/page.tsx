@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/toast";
+import { useDepartments } from "@/lib/departments-store";
 import {
   Search,
   Filter,
@@ -25,6 +27,7 @@ import {
   Edit,
   Trash2,
   Send,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -149,10 +152,13 @@ const mockEmployees: Employee[] = [
   },
 ];
 
-const departments = ["All", "Finance", "HR", "Operations", "Sales", "IT", "Marketing"];
+const defaultDepartments = ["All", "Finance", "HR", "Operations", "Sales", "IT", "Marketing"];
 const statuses = ["All", "Active", "Inactive", "Pending"];
 
 export default function UserManagementPage() {
+  const { addToast } = useToast();
+  const { departments: deptList } = useDepartments();
+  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -162,7 +168,128 @@ export default function UserManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const filteredEmployees = mockEmployees.filter((emp) => {
+  // Modal states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<Employee | null>(null);
+  const [userToView, setUserToView] = useState<Employee | null>(null);
+  const [userToEdit, setUserToEdit] = useState<Employee | null>(null);
+
+  // New user form state
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    department: "Finance",
+    role: "",
+  });
+
+  // Get departments from store + defaults
+  const allDepartments = ["All", ...new Set([...defaultDepartments.slice(1), ...deptList.map(d => d.name)])];
+
+  // Handlers
+  const handleAddUser = () => {
+    if (!newUser.name.trim() || !newUser.email.trim()) {
+      addToast("Please fill in all required fields", "error");
+      return;
+    }
+    const newEmployee: Employee = {
+      id: `${Date.now()}`,
+      name: newUser.name,
+      email: newUser.email,
+      department: newUser.department,
+      role: newUser.role || "Employee",
+      status: "pending",
+      progress: 0,
+      lastActivity: "Never",
+      score: 0,
+      modulesCompleted: 0,
+      totalModules: 8,
+    };
+    setEmployees([...employees, newEmployee]);
+    setShowAddModal(false);
+    setNewUser({ name: "", email: "", department: "Finance", role: "" });
+    addToast(`User "${newUser.name}" added successfully!`, "success");
+  };
+
+  const handleDeleteUser = () => {
+    if (userToDelete) {
+      setEmployees(employees.filter(e => e.id !== userToDelete.id));
+      setSelectedUsers(selectedUsers.filter(id => id !== userToDelete.id));
+      addToast(`User "${userToDelete.name}" deleted successfully`, "success");
+      setShowDeleteModal(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedUsers.length === 0) return;
+    setEmployees(employees.filter(e => !selectedUsers.includes(e.id)));
+    addToast(`${selectedUsers.length} user(s) deleted successfully`, "success");
+    setSelectedUsers([]);
+  };
+
+  const handleViewUser = (employee: Employee) => {
+    setUserToView(employee);
+    setShowViewModal(true);
+  };
+
+  const handleEditUser = (employee: Employee) => {
+    setUserToEdit(employee);
+    setNewUser({
+      name: employee.name,
+      email: employee.email,
+      department: employee.department,
+      role: employee.role,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!userToEdit) return;
+    setEmployees(employees.map(e => 
+      e.id === userToEdit.id 
+        ? { ...e, name: newUser.name, email: newUser.email, department: newUser.department, role: newUser.role }
+        : e
+    ));
+    addToast(`User "${newUser.name}" updated successfully`, "success");
+    setShowEditModal(false);
+    setUserToEdit(null);
+    setNewUser({ name: "", email: "", department: "Finance", role: "" });
+  };
+
+  const confirmDelete = (employee: Employee) => {
+    setUserToDelete(employee);
+    setShowDeleteModal(true);
+  };
+
+  const handleSendReminder = () => {
+    addToast(`Reminder sent to ${selectedUsers.length} user(s)`, "success");
+  };
+
+  const handleSendEmail = () => {
+    addToast(`Email composed for ${selectedUsers.length} user(s)`, "success");
+  };
+
+  const handleExport = () => {
+    const csvContent = employees.map(e => 
+      `${e.name},${e.email},${e.department},${e.role},${e.status},${e.progress}%,${e.score}%`
+    ).join("\n");
+    const header = "Name,Email,Department,Role,Status,Progress,Score\n";
+    const blob = new Blob([header + csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "users_export.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addToast("Users exported to CSV", "success");
+  };
+
+  const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
       emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       emp.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -239,9 +366,9 @@ export default function UserManagementPage() {
     }
   };
 
-  const activeCount = mockEmployees.filter((e) => e.status === "active").length;
-  const completedCount = mockEmployees.filter((e) => e.progress === 100).length;
-  const overdueCount = mockEmployees.filter(
+  const activeCount = employees.filter((e) => e.status === "active").length;
+  const completedCount = employees.filter((e) => e.progress === 100).length;
+  const overdueCount = employees.filter(
     (e) => e.progress < 50 && e.status === "active"
   ).length;
 
@@ -263,11 +390,14 @@ export default function UserManagementPage() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" className="border-border">
+                <Button variant="outline" className="border-border" onClick={handleExport}>
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Button 
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setShowAddModal(true)}
+                >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add User
                 </Button>
@@ -286,7 +416,7 @@ export default function UserManagementPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Total Users</p>
                     <p className="text-2xl font-bold text-card-foreground">
-                      {mockEmployees.length}
+                      {employees.length}
                     </p>
                   </div>
                 </div>
@@ -362,7 +492,7 @@ export default function UserManagementPage() {
                     onChange={(e) => setSelectedDepartment(e.target.value)}
                     className="rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    {departments.map((dept) => (
+                    {allDepartments.map((dept) => (
                       <option key={dept} value={dept}>
                         {dept === "All" ? "All Departments" : dept}
                       </option>
@@ -387,13 +517,22 @@ export default function UserManagementPage() {
                     <span className="text-sm text-muted-foreground">
                       {selectedUsers.length} selected
                     </span>
-                    <Button size="sm" variant="outline" className="border-border">
+                    <Button size="sm" variant="outline" className="border-border" onClick={handleSendReminder}>
                       <Send className="h-4 w-4 mr-2" />
                       Send Reminder
                     </Button>
-                    <Button size="sm" variant="outline" className="border-border">
+                    <Button size="sm" variant="outline" className="border-border" onClick={handleSendEmail}>
                       <Mail className="h-4 w-4 mr-2" />
                       Email
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                      onClick={handleBulkDelete}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
                     </Button>
                   </div>
                 )}
@@ -540,7 +679,8 @@ export default function UserManagementPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 hover:text-primary"
+                              onClick={() => handleViewUser(employee)}
                             >
                               <Eye className="h-4 w-4" />
                               <span className="sr-only">View</span>
@@ -548,7 +688,8 @@ export default function UserManagementPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 hover:text-primary"
+                              onClick={() => handleEditUser(employee)}
                             >
                               <Edit className="h-4 w-4" />
                               <span className="sr-only">Edit</span>
@@ -556,7 +697,8 @@ export default function UserManagementPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => confirmDelete(employee)}
                             >
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only">Delete</span>
@@ -616,6 +758,258 @@ export default function UserManagementPage() {
           </Card>
         </div>
       </main>
+
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">Add New User</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowAddModal(false)}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Full Name *</label>
+                <Input
+                  placeholder="e.g., John Smith"
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Email *</label>
+                <Input
+                  type="email"
+                  placeholder="e.g., john.smith@company.com"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Department</label>
+                <select
+                  value={newUser.department}
+                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {allDepartments.filter(d => d !== "All").map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Role</label>
+                <Input
+                  placeholder="e.g., Software Engineer"
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => setShowAddModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleAddUser}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add User
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && userToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">Edit User</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { setShowEditModal(false); setUserToEdit(null); }}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Full Name</label>
+                <Input
+                  value={newUser.name}
+                  onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Email</label>
+                <Input
+                  type="email"
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Department</label>
+                <select
+                  value={newUser.department}
+                  onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {allDepartments.filter(d => d !== "All").map((dept) => (
+                    <option key={dept} value={dept}>{dept}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">Role</label>
+                <Input
+                  value={newUser.role}
+                  onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                  className="bg-input border-border text-foreground"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => { setShowEditModal(false); setUserToEdit(null); }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleSaveEdit}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* View User Modal */}
+      {showViewModal && userToView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md border-border bg-card">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-foreground">User Details</CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { setShowViewModal(false); setUserToView(null); }}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/20 text-xl font-medium text-primary">
+                  {userToView.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">{userToView.name}</h3>
+                  <p className="text-sm text-muted-foreground">{userToView.email}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div className="rounded-lg bg-secondary/30 p-3">
+                  <p className="text-xs text-muted-foreground">Department</p>
+                  <p className="font-medium text-foreground">{userToView.department}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-3">
+                  <p className="text-xs text-muted-foreground">Role</p>
+                  <p className="font-medium text-foreground">{userToView.role}</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-3">
+                  <p className="text-xs text-muted-foreground">Progress</p>
+                  <p className="font-medium text-primary">{userToView.progress}%</p>
+                </div>
+                <div className="rounded-lg bg-secondary/30 p-3">
+                  <p className="text-xs text-muted-foreground">Score</p>
+                  <p className="font-medium text-primary">{userToView.score > 0 ? `${userToView.score}%` : "-"}</p>
+                </div>
+              </div>
+              <div className="rounded-lg bg-secondary/30 p-3">
+                <p className="text-xs text-muted-foreground">Modules Completed</p>
+                <p className="font-medium text-foreground">{userToView.modulesCompleted} / {userToView.totalModules}</p>
+                <Progress value={(userToView.modulesCompleted / userToView.totalModules) * 100} className="h-2 mt-2" />
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Last Activity</span>
+                <span className="text-foreground">{userToView.lastActivity}</span>
+              </div>
+              <Button
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => { setShowViewModal(false); handleEditUser(userToView); }}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit User
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-sm border-border bg-card">
+            <CardHeader>
+              <CardTitle className="text-foreground">Confirm Delete</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                <AlertTriangle className="h-8 w-8 text-destructive flex-shrink-0" />
+                <div>
+                  <p className="text-foreground font-medium">Are you sure you want to delete this user?</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    "{userToDelete.name}" will be permanently removed. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-border"
+                  onClick={() => { setShowDeleteModal(false); setUserToDelete(null); }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={handleDeleteUser}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
