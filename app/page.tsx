@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { Sidebar } from "@/components/training/sidebar";
+import { Sidebar, MobileHeader } from "@/components/training/sidebar";
 import { ModuleCard } from "@/components/training/module-card";
 import { StatCard } from "@/components/training/stat-card";
 import { modules, mockUserProgress, roles } from "@/lib/training-data";
@@ -61,10 +61,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MobileHeader />
       <Sidebar />
 
-      <main className="pl-64">
-        <div className="px-8 py-8">
+      <main className="pt-14 lg:pt-0 lg:pl-64">
+        <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">
@@ -77,7 +78,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Grid */}
-          <div className="mb-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mb-6 lg:mb-8 grid gap-3 grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Modules Completed"
               value={`${completedModules}/${modules.length}`}
@@ -107,7 +108,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid gap-8 lg:grid-cols-3">
+          <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
             {/* Training Modules */}
             <div className="lg:col-span-2">
               <div className="mb-4 flex items-center justify-between">
@@ -122,7 +123,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {recommendedModules.slice(0, 4).map((module) => (
                   <ModuleCard
                     key={module.id}

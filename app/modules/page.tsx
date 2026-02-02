@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "@/components/training/sidebar";
+import { Sidebar, MobileHeader } from "@/components/training/sidebar";
 import { ModuleCard } from "@/components/training/module-card";
 import { modules, mockUserProgress } from "@/lib/training-data";
 import { Search, Filter, Grid3X3, List } from "lucide-react";
@@ -64,10 +64,11 @@ export default function ModulesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MobileHeader />
       <Sidebar />
 
-      <main className="pl-64">
-        <div className="px-8 py-8">
+      <main className="pt-14 lg:pt-0 lg:pl-64">
+        <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">
@@ -80,7 +81,7 @@ export default function ModulesPage() {
           </div>
 
           {/* Stats Bar */}
-          <div className="mb-6 flex items-center gap-6">
+          <div className="mb-6 flex flex-wrap items-center gap-3 lg:gap-6">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Total:</span>
               <Badge variant="secondary">{stats.total} modules</Badge>
@@ -181,9 +182,9 @@ export default function ModulesPage() {
           {filteredModules.length > 0 ? (
             <div
               className={cn(
-                "grid gap-4",
+                "grid gap-3 lg:gap-4",
                 viewMode === "grid"
-                  ? "md:grid-cols-2 lg:grid-cols-3"
+                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                   : "grid-cols-1"
               )}
             >

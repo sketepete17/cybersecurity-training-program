@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sidebar } from "@/components/training/sidebar";
+import { Sidebar, MobileHeader } from "@/components/training/sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -438,7 +438,7 @@ export default function SettingsPage() {
 
             <div className="space-y-4">
               <h4 className="font-medium text-foreground">Theme</h4>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <ThemeOption
                   icon={Sun}
                   label="Light"
@@ -522,10 +522,11 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <MobileHeader />
       <Sidebar />
 
-      <main className="pl-64">
-        <div className="px-8 py-8">
+      <main className="pt-14 lg:pt-0 lg:pl-64">
+        <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">Settings</h1>
