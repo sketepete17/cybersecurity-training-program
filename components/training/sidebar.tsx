@@ -19,6 +19,7 @@ import {
   Building2,
   FileText,
   Bell,
+  Activity,
 } from "lucide-react";
 
 // User navigation items
@@ -34,6 +35,7 @@ const adminNavItems = [
   { href: "/admin", label: "Analytics Dashboard", icon: BarChart3 },
   { href: "/admin/users", label: "User Management", icon: Users },
   { href: "/admin/departments", label: "Departments", icon: Building2 },
+  { href: "/admin/activity", label: "Activity Log", icon: Activity },
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
 ];
