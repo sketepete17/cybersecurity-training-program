@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/components/ui/toast";
 import { DepartmentsProvider } from "@/lib/departments-store";
+import { MobileSidebarProvider } from "@/components/training/sidebar";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -48,7 +49,9 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <DepartmentsProvider>
-              {children}
+              <MobileSidebarProvider>
+                {children}
+              </MobileSidebarProvider>
             </DepartmentsProvider>
           </ToastProvider>
         </AuthProvider>

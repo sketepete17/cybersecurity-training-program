@@ -4,7 +4,7 @@ import React from "react"
 
 import { useState, use } from "react";
 import Link from "next/link";
-import { Sidebar } from "@/components/training/sidebar";
+import { Sidebar, MobileHeader } from "@/components/training/sidebar";
 import { modules, mockUserProgress } from "@/lib/training-data";
 import type { Lesson, QuizQuestion, ScenarioOption } from "@/lib/training-data";
 import {
@@ -140,10 +140,11 @@ export default function ModuleDetailPage({
 
   return (
     <div className="min-h-screen bg-background">
+      <MobileHeader />
       <Sidebar />
 
-      <main className="pl-64">
-        <div className="px-8 py-8">
+      <main className="pt-14 lg:pt-0 lg:pl-64">
+        <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-6">
             <Link
