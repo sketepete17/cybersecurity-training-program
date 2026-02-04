@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/components/ui/toast";
 import { DepartmentsProvider } from "@/lib/departments-store";
+import { CTFProvider } from "@/lib/ctf-store";
 import { MobileSidebarProvider } from "@/components/training/sidebar";
 import "./globals.css";
 
@@ -83,9 +84,11 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <DepartmentsProvider>
-              <MobileSidebarProvider>
-                {children}
-              </MobileSidebarProvider>
+              <CTFProvider>
+                <MobileSidebarProvider>
+                  {children}
+                </MobileSidebarProvider>
+              </CTFProvider>
             </DepartmentsProvider>
           </ToastProvider>
         </AuthProvider>
