@@ -174,10 +174,11 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedRole("user")}
-                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                    aria-pressed={selectedRole === "user"}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       selectedRole === "user"
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-secondary/30 hover:border-muted-foreground"
+                        ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                        : "border-border bg-secondary/30 hover:border-muted-foreground hover:scale-[1.02]"
                     }`}
                   >
                     <div
@@ -206,10 +207,11 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedRole("admin")}
-                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all ${
+                    aria-pressed={selectedRole === "admin"}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       selectedRole === "admin"
-                        ? "border-primary bg-primary/10"
-                        : "border-border bg-secondary/30 hover:border-muted-foreground"
+                        ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
+                        : "border-border bg-secondary/30 hover:border-muted-foreground hover:scale-[1.02]"
                     }`}
                   >
                     <div

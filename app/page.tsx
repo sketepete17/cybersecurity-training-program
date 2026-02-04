@@ -64,21 +64,31 @@ export default function DashboardPage() {
       <MobileHeader />
       <Sidebar />
 
-      <main className="pt-14 lg:pt-0 lg:pl-64">
+      <main id="main-content" className="pt-14 lg:pt-0 lg:pl-64">
         <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              Welcome back, Jane
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Continue your security awareness training and protect your
-              organization.
-            </p>
+          <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  Welcome back, Jane
+                </h1>
+                <p className="mt-2 text-muted-foreground">
+                  Continue your security awareness training and protect your
+                  organization.
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-lg bg-primary/10 px-4 py-2 border border-primary/20">
+                  <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  <span className="text-sm font-medium text-primary">Training Active</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="mb-6 lg:mb-8 grid gap-3 grid-cols-2 lg:grid-cols-4">
+          <div className="mb-6 lg:mb-8 grid gap-3 grid-cols-2 lg:grid-cols-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
             <StatCard
               title="Modules Completed"
               value={`${completedModules}/${modules.length}`}
@@ -108,7 +118,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
+          <div className="grid gap-6 lg:gap-8 lg:grid-cols-3 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
             {/* Training Modules */}
             <div className="lg:col-span-2">
               <div className="mb-4 flex items-center justify-between">

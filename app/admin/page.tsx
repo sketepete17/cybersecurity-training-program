@@ -175,7 +175,7 @@ return (
     <MobileHeader />
     <Sidebar />
   
-    <main className="pt-14 lg:pt-0 lg:pl-64">
+    <main id="main-content" className="pt-14 lg:pt-0 lg:pl-64">
       <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-8">

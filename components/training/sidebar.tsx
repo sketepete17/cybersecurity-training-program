@@ -23,6 +23,7 @@ import {
   Activity,
   Menu,
   X,
+  Flag,
 } from "lucide-react";
 
 // Mobile sidebar context
@@ -39,6 +40,7 @@ export function useMobileSidebar() {
 const userNavItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/modules", label: "Training Modules", icon: BookOpen },
+  { href: "/ctf", label: "CTF Practice", icon: Flag },
   { href: "/progress", label: "My Progress", icon: Trophy },
   { href: "/certificates", label: "Certificates", icon: Award },
 ];
@@ -87,7 +89,7 @@ export function MobileHeader() {
 
   return (
     <header className="lg:hidden fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between border-b border-border bg-background px-4">
-      <div className="flex items-center gap-3">
+      <Link href={isAdmin ? "/admin" : "/"} className="flex items-center gap-3 transition-opacity hover:opacity-80">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
           <ShieldCheck className="h-4 w-4 text-primary-foreground" />
         </div>
@@ -95,7 +97,7 @@ export function MobileHeader() {
         {isAdmin && (
           <span className="text-xs text-primary font-medium">Admin</span>
         )}
-      </div>
+      </Link>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-secondary"
@@ -169,8 +171,11 @@ export function Sidebar() {
       )}>
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+        <Link 
+          href={isAdmin ? "/admin" : "/"} 
+          className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6 transition-all duration-200 hover:bg-sidebar-accent/50"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary transition-transform duration-200 hover:scale-105">
             <ShieldCheck className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
@@ -183,7 +188,7 @@ export function Sidebar() {
               </span>
             )}
           </div>
-        </div>
+        </Link>
 
         {/* Main Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4">
@@ -203,14 +208,20 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-sidebar-accent text-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-primary shadow-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn(
+                  "h-5 w-5 transition-transform duration-200",
+                  !isActive && "group-hover:scale-110"
+                )} />
                 {item.label}
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                )}
               </Link>
             );
           })}
