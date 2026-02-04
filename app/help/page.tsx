@@ -321,30 +321,40 @@ export default function HelpPage() {
                     {faqs.map((faq, index) => (
                       <div
                         key={index}
-                        className="rounded-lg border border-border overflow-hidden"
+                        className={`rounded-lg border overflow-hidden transition-all duration-300 ${
+                          expandedFaq === index 
+                            ? "border-primary/30 bg-primary/5 shadow-sm" 
+                            : "border-border hover:border-primary/20"
+                        }`}
                       >
                         <button
                           onClick={() =>
                             setExpandedFaq(expandedFaq === index ? null : index)
                           }
-                          className="w-full flex items-center justify-between p-4 text-left hover:bg-secondary/30 transition-colors"
+                          className="w-full flex items-center justify-between p-4 text-left transition-colors"
                         >
-                          <span className="font-medium text-foreground pr-4">
+                          <span className={`font-medium pr-4 transition-colors ${
+                            expandedFaq === index ? "text-primary" : "text-foreground"
+                          }`}>
                             {faq.question}
                           </span>
                           <ChevronDown
-                            className={`h-5 w-5 text-muted-foreground shrink-0 transition-transform ${
-                              expandedFaq === index ? "rotate-180" : ""
+                            className={`h-5 w-5 shrink-0 transition-all duration-300 ${
+                              expandedFaq === index 
+                                ? "rotate-180 text-primary" 
+                                : "text-muted-foreground"
                             }`}
                           />
                         </button>
-                        {expandedFaq === index && (
+                        <div className={`overflow-hidden transition-all duration-300 ${
+                          expandedFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                        }`}>
                           <div className="px-4 pb-4">
                             <p className="text-muted-foreground leading-relaxed">
                               {faq.answer}
                             </p>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>

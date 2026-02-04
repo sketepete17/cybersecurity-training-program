@@ -143,7 +143,7 @@ export default function ModuleDetailPage({
       <MobileHeader />
       <Sidebar />
 
-      <main className="pt-14 lg:pt-0 lg:pl-64">
+      <main id="main-content" className="pt-14 lg:pt-0 lg:pl-64">
         <div className="px-4 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <div className="mb-6">
@@ -777,28 +777,57 @@ function CompletionSection({
   onNextLesson: () => void;
 }) {
   return (
-    <div className="text-center py-8">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/20 mx-auto mb-6">
-        <CheckCircle2 className="h-10 w-10 text-primary" />
+    <div className="text-center py-8 animate-in fade-in zoom-in-95 duration-500">
+      {/* Success animation container */}
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-32 w-32 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: '2s' }} />
+        </div>
+        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-emerald-400 mx-auto mb-6 shadow-lg shadow-primary/30">
+          <CheckCircle2 className="h-10 w-10 text-primary-foreground animate-in zoom-in duration-300" />
+        </div>
       </div>
-      <h2 className="text-2xl font-bold text-foreground mb-2">
-        Lesson Complete!
+      
+      <h2 className="text-2xl font-bold text-foreground mb-2 animate-in slide-in-from-bottom duration-500 delay-100">
+        {isLastLesson ? "Module Complete!" : "Lesson Complete!"}
       </h2>
-      <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-        You've successfully completed "{lesson.title}". Keep up the great work
-        protecting your organization!
+      <p className="text-muted-foreground mb-8 max-w-md mx-auto animate-in slide-in-from-bottom duration-500 delay-200">
+        {"You've successfully completed"} "{lesson.title}". {isLastLesson 
+          ? "Congratulations on finishing this module!" 
+          : "Keep up the great work protecting your organization!"}
       </p>
 
-      <div className="flex items-center justify-center gap-4">
+      {isLastLesson && (
+        <div className="flex items-center justify-center gap-6 mb-8 animate-in slide-in-from-bottom duration-500 delay-300">
+          <div className="text-center">
+            <p className="text-3xl font-bold text-primary">100%</p>
+            <p className="text-sm text-muted-foreground">Progress</p>
+          </div>
+          <div className="h-10 w-px bg-border" />
+          <div className="text-center">
+            <p className="text-3xl font-bold text-primary">A+</p>
+            <p className="text-sm text-muted-foreground">Grade</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-center gap-4 animate-in slide-in-from-bottom duration-500 delay-300">
         {isLastLesson ? (
-          <Link href="/modules">
-            <Button size="lg">
-              Back to Modules
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <>
+            <Link href="/certificates">
+              <Button variant="outline" size="lg" className="border-primary text-primary hover:bg-primary/10">
+                View Certificate
+              </Button>
+            </Link>
+            <Link href="/modules">
+              <Button size="lg" className="bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90">
+                Back to Modules
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </>
         ) : (
-          <Button onClick={onNextLesson} size="lg">
+          <Button onClick={onNextLesson} size="lg" className="bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90">
             Next Lesson
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

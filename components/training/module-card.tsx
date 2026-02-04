@@ -48,15 +48,17 @@ export function ModuleCard({ module, progress = [], className }: ModuleCardProps
     <Link href={`/modules/${module.id}`}>
       <Card
         className={cn(
-          "group relative overflow-hidden border-border bg-card transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5",
+          "group relative overflow-hidden border-border bg-card transition-all duration-300 ease-out",
+          "hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1",
+          "focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/20",
           className
         )}
       >
         <CardContent className="p-6">
           {/* Header */}
           <div className="flex items-start justify-between">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-              <Icon className="h-6 w-6 text-primary" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 transition-all duration-300 group-hover:bg-primary/20 group-hover:scale-110">
+              <Icon className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
             </div>
             {isCompleted ? (
               <Badge className="bg-primary/20 text-primary hover:bg-primary/30">
@@ -96,11 +98,11 @@ export function ModuleCard({ module, progress = [], className }: ModuleCardProps
           <div className="mt-4">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
               <span>Progress</span>
-              <span>{Math.round(progressPercent)}%</span>
+              <span className="font-medium">{Math.round(progressPercent)}%</span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary/80">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-500"
+                className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-700 ease-out"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>

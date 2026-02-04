@@ -11,9 +11,30 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CyberShield - Security Awareness Training",
+  title: {
+    default: "CyberShield - Security Awareness Training",
+    template: "%s | CyberShield",
+  },
   description:
-    "Empowering employees with practical cybersecurity skills through role-based, interactive training modules.",
+    "Empowering employees with practical cybersecurity skills through role-based, interactive training modules. Protect your organization from cyber threats.",
+  keywords: ["cybersecurity", "security awareness", "training", "phishing prevention", "data protection"],
+  authors: [{ name: "CyberShield" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "CyberShield",
+    title: "CyberShield - Security Awareness Training",
+    description: "Interactive cybersecurity training for modern organizations",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CyberShield - Security Awareness Training",
+    description: "Interactive cybersecurity training for modern organizations",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   generator: "v0.app",
   icons: {
     icon: [
@@ -35,7 +56,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1a1f2e",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -46,6 +73,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} font-sans antialiased`}>
+        {/* Skip link for accessibility */}
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          Skip to main content
+        </a>
         <AuthProvider>
           <ToastProvider>
             <DepartmentsProvider>

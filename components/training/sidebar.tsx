@@ -203,14 +203,20 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   isActive
-                    ? "bg-sidebar-accent text-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    ? "bg-sidebar-accent text-primary shadow-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:translate-x-1"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn(
+                  "h-5 w-5 transition-transform duration-200",
+                  !isActive && "group-hover:scale-110"
+                )} />
                 {item.label}
+                {isActive && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                )}
               </Link>
             );
           })}
