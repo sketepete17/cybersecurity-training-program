@@ -16,6 +16,7 @@ import {
   Briefcase,
   DollarSign,
   Settings,
+  Flag,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -246,6 +247,31 @@ export default function DashboardPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* CTF Practice */}
+              <Link href="/ctf">
+                <Card className="border-border bg-card hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/20 group-hover:from-primary/30 group-hover:to-blue-500/30 transition-colors">
+                        <Flag className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                          CTF Practice Arena
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Test your skills with hands-on capture the flag challenges
+                        </p>
+                        <div className="mt-3 flex items-center text-xs text-primary">
+                          <span>18 challenges available</span>
+                          <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
 
               {/* Quick Tips */}
               <Card className="border-primary/20 bg-primary/5">

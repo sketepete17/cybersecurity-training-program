@@ -53,6 +53,7 @@ const adminNavItems = [
   { href: "/admin/activity", label: "Activity Log", icon: Activity },
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
+  { href: "/ctf", label: "CTF Practice", icon: Flag },
 ];
 
 // Shared bottom navigation

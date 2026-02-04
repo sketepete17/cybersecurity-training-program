@@ -22,6 +22,7 @@ import {
   Award,
   Mail,
   Eye,
+  Flag,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -719,6 +720,42 @@ return (
                 </Link>
               </CardContent>
             </Card>
+          </div>
+
+          {/* CTF Practice Section */}
+          <div className="mt-6">
+            <Link href="/ctf">
+              <Card className="border-border bg-card hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 cursor-pointer group">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/20 group-hover:from-primary/30 group-hover:to-blue-500/30 transition-colors">
+                        <Flag className="h-7 w-7 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-card-foreground group-hover:text-primary transition-colors">
+                          CTF Practice Arena
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          18 hands-on challenges across 6 categories - test your team's cybersecurity skills
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-primary">18</p>
+                        <p className="text-xs text-muted-foreground">Challenges</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-foreground">6</p>
+                        <p className="text-xs text-muted-foreground">Categories</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         </div>
       </main>

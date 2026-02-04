@@ -598,8 +598,14 @@ function MetadataChallenge() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-secondary/50 p-4 border border-border">
-        <div className="flex items-center justify-center h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg mb-4">
-          <span className="text-muted-foreground">company_photo.jpg</span>
+        <div className="flex items-center justify-center h-32 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg mb-4 relative overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/30 blur-xl" />
+          </div>
+          <div className="relative flex flex-col items-center gap-2">
+            <Search className="h-8 w-8 text-muted-foreground/50" />
+            <span className="text-muted-foreground text-sm font-mono">company_photo.jpg</span>
+          </div>
         </div>
         <h4 className="font-medium text-foreground mb-3">EXIF Metadata</h4>
         <div className="space-y-1 text-sm font-mono">
@@ -1017,11 +1023,18 @@ function SteganographyChallenge() {
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-secondary/50 p-4 border border-border">
-        <div className="flex items-center justify-center h-40 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg mb-4 relative">
-          <span className="text-muted-foreground">secret_image.png</span>
+        <div className="flex items-center justify-center h-40 bg-gradient-to-br from-green-500/20 to-blue-500/20 rounded-lg mb-4 relative overflow-hidden">
+          <div className="absolute inset-0">
+            <div className="absolute top-4 left-4 w-16 h-16 rounded-full bg-green-400/20 blur-xl" />
+            <div className="absolute bottom-4 right-4 w-20 h-20 rounded-full bg-blue-400/20 blur-xl" />
+          </div>
+          <div className="relative flex flex-col items-center gap-2">
+            <Code className="h-10 w-10 text-muted-foreground/50" />
+            <span className="text-muted-foreground text-sm font-mono">secret_image.png</span>
+          </div>
           {extracted && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-              <p className="text-primary font-mono font-bold">STEGANOGRAPHY</p>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/70 rounded-lg backdrop-blur-sm animate-in fade-in duration-300">
+              <p className="text-primary font-mono font-bold text-lg">STEGANOGRAPHY</p>
             </div>
           )}
         </div>
