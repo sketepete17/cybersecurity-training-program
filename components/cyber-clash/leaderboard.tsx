@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, TrendingUp, Bot, User } from "lucide-react";
+import { Trophy, Bot, User, TrendingUp, Crown } from "lucide-react";
 import type { Player } from "@/lib/cyber-clash-store";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,9 @@ interface LeaderboardProps {
   compact?: boolean;
 }
 
+const RANK_COLORS = ["#FFB800", "#A0AEC0", "#CD7F32"];
+const AVATAR_COLORS = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#FF6B35"];
+
 export function Leaderboard({ players, myPlayerId, compact = false }: LeaderboardProps) {
   const sorted = [...players].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
@@ -17,14 +20,20 @@ export function Leaderboard({ players, myPlayerId, compact = false }: Leaderboar
   });
 
   return (
-    <div className={cn(
-      "rounded-2xl border-2 border-border bg-card overflow-hidden",
-      compact ? "w-full" : "w-full"
-    )}>
+    <div
+      className="overflow-hidden rounded-3xl border-[3px]"
+      style={{
+        background: "var(--cc-card)",
+        borderColor: "rgba(255,255,255,0.06)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center gap-3 border-b-2 border-border px-5 py-3 bg-secondary/30">
-        <Trophy className="h-5 w-5 text-[#ffcc00]" />
-        <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
+      <div
+        className="flex items-center gap-3 px-5 py-3"
+        style={{ borderBottom: "3px solid rgba(255,255,255,0.06)" }}
+      >
+        <Trophy className="h-5 w-5" style={{ color: "var(--cc-amber)" }} />
+        <h3 className="text-xs font-black uppercase tracking-[0.15em]" style={{ color: "#fff" }}>
           Leaderboard
         </h3>
       </div>
@@ -35,60 +44,56 @@ export function Leaderboard({ players, myPlayerId, compact = false }: Leaderboar
           const isMe = player.id === myPlayerId;
           const isBot = player.id.startsWith("bot-");
           const rank = index + 1;
+          const color = AVATAR_COLORS[players.findIndex(p => p.id === player.id) % AVATAR_COLORS.length];
+          const rankColor = RANK_COLORS[index] ?? "rgba(255,255,255,0.3)";
 
           return (
             <div
               key={player.id}
               className={cn(
-                "flex items-center gap-3 px-5 py-3 transition-all duration-300",
-                index < sorted.length - 1 && "border-b border-border/50",
-                isMe && "bg-[#00ff88]/5"
+                "flex items-center gap-3 px-5 transition-all duration-300",
+                compact ? "py-2.5" : "py-3",
               )}
+              style={{
+                background: isMe ? `${color}08` : "transparent",
+                borderBottom: index < sorted.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+              }}
             >
               {/* Rank */}
-              <div className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-black",
-                rank === 1 && "bg-[#ffcc00]/20 text-[#ffcc00]",
-                rank === 2 && "bg-muted text-muted-foreground",
-                rank === 3 && "bg-[#cd7f32]/20 text-[#cd7f32]",
-                rank > 3 && "bg-secondary text-muted-foreground"
-              )}>
-                {rank}
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black"
+                style={{
+                  background: rank <= 3 ? `${rankColor}20` : "rgba(255,255,255,0.04)",
+                  color: rank <= 3 ? rankColor : "rgba(255,255,255,0.3)",
+                }}
+              >
+                {rank === 1 ? <Crown className="h-4 w-4" /> : rank}
               </div>
 
               {/* Avatar */}
-              <div className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                isMe ? "bg-[#00ff88]/20" : "bg-secondary"
-              )}>
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                style={{ background: `${color}20` }}
+              >
                 {isBot ? (
-                  <Bot className={cn("h-4 w-4", isMe ? "text-[#00ff88]" : "text-muted-foreground")} />
+                  <Bot className="h-4 w-4" style={{ color }} />
                 ) : (
-                  <User className={cn("h-4 w-4", isMe ? "text-[#00ff88]" : "text-muted-foreground")} />
+                  <User className="h-4 w-4" style={{ color }} />
                 )}
               </div>
 
               {/* Name */}
-              <span className={cn(
-                "flex-1 truncate font-bold text-sm",
-                isMe ? "text-[#00ff88]" : "text-foreground"
-              )}>
+              <span className={cn("flex-1 truncate text-sm font-bold")} style={{ color: isMe ? color : "#fff" }}>
                 {player.name}
                 {isMe && !compact && (
-                  <span className="ml-1 text-xs opacity-60">(You)</span>
+                  <span className="ml-1 text-[10px] opacity-50">(You)</span>
                 )}
               </span>
 
               {/* Score */}
               <div className="flex items-center gap-1">
-                <TrendingUp className={cn(
-                  "h-3.5 w-3.5",
-                  isMe ? "text-[#00ff88]" : "text-muted-foreground"
-                )} />
-                <span className={cn(
-                  "font-black text-sm tabular-nums",
-                  isMe ? "text-[#00ff88]" : "text-foreground"
-                )}>
+                <TrendingUp className="h-3 w-3" style={{ color: isMe ? color : "rgba(255,255,255,0.3)" }} />
+                <span className="text-sm font-black tabular-nums" style={{ color: isMe ? color : "#fff" }}>
                   {player.score}
                 </span>
               </div>

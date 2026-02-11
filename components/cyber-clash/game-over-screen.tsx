@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Trophy, Medal, RotateCcw, ArrowLeft, Crown, Bot, User, Star } from "lucide-react";
-import Link from "next/link";
+import { useEffect, useState, useMemo } from "react";
+import { Trophy, RotateCcw, Crown, Bot, User, Star, Medal, Sparkles } from "lucide-react";
 import type { Player } from "@/lib/cyber-clash-store";
 import { cn } from "@/lib/utils";
 
@@ -12,85 +11,132 @@ interface GameOverScreenProps {
   onPlayAgain: () => void;
 }
 
+const AVATAR_COLORS = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#FF6B35"];
+const RANK_COLORS = ["#FFB800", "#A0AEC0", "#CD7F32"];
+
+function ConfettiPiece({ delay, color, left }: { delay: number; color: string; left: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute top-0 h-3 w-3 rounded-sm"
+      style={{
+        left: `${left}%`,
+        background: color,
+        animation: `confetti-fall ${2 + Math.random() * 2}s linear ${delay}s infinite`,
+        opacity: 0.7,
+      }}
+    />
+  );
+}
+
 export function GameOverScreen({ players, myPlayerId, onPlayAgain }: GameOverScreenProps) {
-  const [animateIn, setAnimateIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
 
   useEffect(() => {
-    setAnimateIn(true);
-    const t = setTimeout(() => setShowPlayers(true), 600);
+    setMounted(true);
+    const t = setTimeout(() => setShowPlayers(true), 500);
     return () => clearTimeout(t);
   }, []);
 
-  // Players are already sorted by score
   const winner = players[0];
   const isWinner = winner?.id === myPlayerId;
   const myPlayer = players.find((p) => p.id === myPlayerId);
   const myRank = players.findIndex((p) => p.id === myPlayerId) + 1;
 
+  const confettiPieces = useMemo(() => {
+    const pieces = [];
+    const colors = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7"];
+    for (let i = 0; i < 30; i++) {
+      pieces.push({
+        delay: Math.random() * 3,
+        color: colors[i % colors.length],
+        left: Math.random() * 100,
+      });
+    }
+    return pieces;
+  }, []);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-8 relative overflow-hidden">
-      {/* Background celebration */}
-      {isWinner && (
-        <>
-          <div className="absolute top-0 left-0 w-full h-full opacity-[0.04]" style={{
-            backgroundImage: "radial-gradient(circle at 30% 20%, rgba(255,204,0,0.5) 0%, transparent 40%), radial-gradient(circle at 70% 80%, rgba(0,255,136,0.5) 0%, transparent 40%)",
-          }} />
-        </>
-      )}
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-8" style={{ background: "var(--cc-dark)" }}>
+      {/* Confetti */}
+      {isWinner && confettiPieces.map((piece, i) => (
+        <ConfettiPiece key={i} {...piece} />
+      ))}
+
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0" style={{
+        background: isWinner
+          ? "radial-gradient(ellipse at 50% 30%, rgba(255,184,0,0.08) 0%, transparent 50%)"
+          : "radial-gradient(ellipse at 50% 30%, rgba(0,229,255,0.06) 0%, transparent 50%)",
+      }} />
 
       <div className={cn(
-        "w-full max-w-lg text-center transition-all duration-700",
-        animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        "relative z-10 w-full max-w-lg transition-all duration-700",
+        mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
       )}>
         {/* Trophy / Result */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <div className="mb-6 flex justify-center">
-            <div className={cn(
-              "relative flex h-24 w-24 items-center justify-center rounded-3xl",
-              isWinner
-                ? "bg-[#ffcc00] shadow-[0_0_60px_rgba(255,204,0,0.3)]"
-                : "bg-card border-2 border-border"
-            )}>
-              {isWinner ? (
-                <Crown className="h-12 w-12 text-[#0a0e14]" />
-              ) : (
-                <Trophy className="h-12 w-12 text-[#ffcc00]" />
-              )}
+            <div className="relative">
+              <div
+                className="flex h-28 w-28 items-center justify-center rounded-[2rem]"
+                style={{
+                  background: isWinner ? "var(--cc-amber)" : "var(--cc-card)",
+                  border: isWinner ? "none" : "3px solid rgba(255,255,255,0.08)",
+                  boxShadow: isWinner ? "0 0 60px rgba(255,184,0,0.4)" : "none",
+                }}
+              >
+                {isWinner ? (
+                  <Crown className="h-14 w-14" style={{ color: "var(--cc-dark)" }} />
+                ) : (
+                  <Trophy className="h-14 w-14" style={{ color: "var(--cc-amber)" }} />
+                )}
+              </div>
               {isWinner && (
                 <>
-                  <Star className="absolute -top-2 -left-2 h-6 w-6 text-[#ffcc00] animate-pulse" />
-                  <Star className="absolute -top-1 -right-3 h-5 w-5 text-[#ffcc00] animate-pulse" style={{ animationDelay: "0.3s" }} />
-                  <Star className="absolute -bottom-2 left-1/2 h-4 w-4 text-[#ffcc00] animate-pulse" style={{ animationDelay: "0.6s" }} />
+                  <Star className="absolute -top-3 -left-3 h-7 w-7 animate-float" style={{ color: "var(--cc-amber)", animationDelay: "0s" }} />
+                  <Star className="absolute -top-1 -right-4 h-5 w-5 animate-float" style={{ color: "var(--cc-cyan)", animationDelay: "0.5s" }} />
+                  <Sparkles className="absolute -bottom-2 left-1/2 h-5 w-5 animate-float" style={{ color: "var(--cc-magenta)", animationDelay: "1s" }} />
                 </>
               )}
             </div>
           </div>
 
-          <h2 className="text-5xl font-black tracking-tight text-foreground mb-2">
-            GAME OVER
+          <h2 className="text-6xl font-black uppercase tracking-tighter" style={{ color: "#fff" }}>
+            GAME
+            <br />
+            <span style={{ color: isWinner ? "var(--cc-amber)" : "var(--cc-cyan)" }}>OVER</span>
           </h2>
 
           {isWinner ? (
-            <p className="text-xl font-bold text-[#ffcc00]">
-              You won! Champion of Cyber Clash!
+            <p className="mt-3 text-xl font-black uppercase tracking-wider" style={{ color: "var(--cc-amber)" }}>
+              You are the champion!
             </p>
           ) : (
-            <p className="text-lg font-bold text-muted-foreground">
-              You placed <span className="text-[#00ff88] font-black">#{myRank}</span> with{" "}
-              <span className="text-foreground font-black">{myPlayer?.score ?? 0}</span> points
+            <p className="mt-3 text-lg font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
+              You placed <span className="font-black" style={{ color: "var(--cc-cyan)" }}>#{myRank}</span> with{" "}
+              <span className="font-black" style={{ color: "#fff" }}>{myPlayer?.score ?? 0}</span> points
             </p>
           )}
         </div>
 
         {/* Final Standings */}
-        <div className={cn(
-          "mb-8 overflow-hidden rounded-2xl border-2 border-border bg-card transition-all duration-700 delay-300",
-          showPlayers ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        )}>
-          <div className="flex items-center gap-3 border-b-2 border-border bg-secondary/30 px-5 py-3">
-            <Medal className="h-5 w-5 text-[#ffcc00]" />
-            <h3 className="text-sm font-black uppercase tracking-wider text-foreground">
+        <div
+          className={cn(
+            "mb-8 overflow-hidden rounded-3xl border-[3px] transition-all duration-700",
+            showPlayers ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}
+          style={{
+            background: "var(--cc-card)",
+            borderColor: "rgba(255,255,255,0.06)",
+          }}
+        >
+          <div
+            className="flex items-center gap-3 px-6 py-4"
+            style={{ borderBottom: "3px solid rgba(255,255,255,0.06)" }}
+          >
+            <Medal className="h-5 w-5" style={{ color: "var(--cc-amber)" }} />
+            <h3 className="text-xs font-black uppercase tracking-[0.15em]" style={{ color: "#fff" }}>
               Final Standings
             </h3>
           </div>
@@ -100,66 +146,70 @@ export function GameOverScreen({ players, myPlayerId, onPlayAgain }: GameOverScr
               const isMe = player.id === myPlayerId;
               const isBot = player.id.startsWith("bot-");
               const rank = index + 1;
-              const isTop = rank === 1;
+              const color = AVATAR_COLORS[players.indexOf(player) % AVATAR_COLORS.length];
+              const rankColor = RANK_COLORS[index] ?? "rgba(255,255,255,0.3)";
 
               return (
                 <div
                   key={player.id}
-                  className={cn(
-                    "flex items-center gap-3 px-5 py-4 transition-all duration-500",
-                    index < players.length - 1 && "border-b border-border/50",
-                    isMe && "bg-[#00ff88]/5",
-                    isTop && "bg-[#ffcc00]/5"
-                  )}
+                  className="flex items-center gap-4 px-6 py-4 transition-all duration-500"
                   style={{
+                    background: rank === 1 ? "rgba(255,184,0,0.04)" : isMe ? `${color}06` : "transparent",
+                    borderBottom: index < players.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                     transitionDelay: showPlayers ? `${index * 100}ms` : "0ms",
                     opacity: showPlayers ? 1 : 0,
                     transform: showPlayers ? "translateX(0)" : "translateX(-20px)",
                   }}
                 >
-                  {/* Rank badge */}
-                  <div className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black",
-                    rank === 1 && "bg-[#ffcc00]/20 text-[#ffcc00]",
-                    rank === 2 && "bg-muted text-foreground",
-                    rank === 3 && "bg-[#cd7f32]/20 text-[#cd7f32]",
-                    rank > 3 && "bg-secondary text-muted-foreground"
-                  )}>
+                  {/* Rank */}
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-black"
+                    style={{
+                      background: rank <= 3 ? `${rankColor}20` : "rgba(255,255,255,0.04)",
+                      color: rank <= 3 ? rankColor : "rgba(255,255,255,0.3)",
+                    }}
+                  >
                     {rank === 1 ? <Crown className="h-5 w-5" /> : `#${rank}`}
                   </div>
 
-                  {/* Player avatar */}
-                  <div className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    isMe ? "bg-[#00ff88]/20" : "bg-secondary"
-                  )}>
+                  {/* Avatar */}
+                  <div
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: `${color}15` }}
+                  >
                     {isBot ? (
-                      <Bot className={cn("h-5 w-5", isMe ? "text-[#00ff88]" : "text-muted-foreground")} />
+                      <Bot className="h-5 w-5" style={{ color }} />
                     ) : (
-                      <User className={cn("h-5 w-5", isMe ? "text-[#00ff88]" : "text-foreground")} />
+                      <User className="h-5 w-5" style={{ color }} />
                     )}
                   </div>
 
                   {/* Name */}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn(
-                      "font-bold truncate",
-                      isMe ? "text-[#00ff88]" : "text-foreground"
-                    )}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-black" style={{ color: isMe ? color : "#fff" }}>
                       {player.name}
-                      {isMe && <span className="ml-1 text-xs opacity-60">(You)</span>}
+                      {isMe && (
+                        <span
+                          className="ml-2 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                          style={{ background: `${color}20`, color }}
+                        >
+                          YOU
+                        </span>
+                      )}
                     </p>
                   </div>
 
                   {/* Score */}
                   <div className="text-right">
-                    <p className={cn(
-                      "text-lg font-black tabular-nums",
-                      rank === 1 ? "text-[#ffcc00]" : isMe ? "text-[#00ff88]" : "text-foreground"
-                    )}>
+                    <p
+                      className="text-xl font-black tabular-nums"
+                      style={{ color: rank === 1 ? "var(--cc-amber)" : isMe ? color : "#fff" }}
+                    >
                       {player.score}
                     </p>
-                    <p className="text-xs text-muted-foreground">pts</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      pts
+                    </p>
                   </div>
                 </div>
               );
@@ -167,22 +217,20 @@ export function GameOverScreen({ players, myPlayerId, onPlayAgain }: GameOverScr
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Actions */}
         <div className="flex flex-col gap-3">
           <button
             onClick={onPlayAgain}
-            className="flex items-center justify-center gap-3 rounded-2xl bg-[#00ff88] px-6 py-5 text-xl font-black uppercase tracking-wider text-[#0a0e14] transition-all duration-200 hover:shadow-[0_0_40px_rgba(0,255,136,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+            className="jackbox-btn flex items-center justify-center gap-3 rounded-2xl px-6 py-5 text-xl"
+            style={{
+              background: "var(--cc-cyan)",
+              color: "var(--cc-dark)",
+              boxShadow: "0 4px 30px rgba(0,229,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+            }}
           >
             <RotateCcw className="h-6 w-6" />
-            Play Again
+            PLAY AGAIN
           </button>
-          <Link
-            href="/ctf"
-            className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-6 py-4 text-sm font-bold uppercase tracking-wider text-muted-foreground transition-all duration-200 hover:border-[#00ff88]/30 hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Training
-          </Link>
         </div>
       </div>
     </div>

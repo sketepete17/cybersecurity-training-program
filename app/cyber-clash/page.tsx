@@ -39,7 +39,7 @@ export default function CyberClashPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-background">
+    <main id="main-content" className="min-h-screen" style={{ background: "var(--cc-dark)" }}>
       {state.screen === "join" && (
         <JoinScreen onJoin={handleJoin} />
       )}

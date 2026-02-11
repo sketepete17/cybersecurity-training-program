@@ -4,13 +4,14 @@ import { useEffect, useRef, useCallback } from "react";
 import {
   Mail,
   Clock,
-  ShieldAlert,
+  Fish,
   ShieldCheck,
   CheckCircle2,
   XCircle,
   Lightbulb,
   ChevronRight,
   AlertTriangle,
+  Lock,
 } from "lucide-react";
 import type { GameState } from "@/lib/cyber-clash-store";
 import { questions } from "@/lib/cyber-clash-store";
@@ -31,44 +32,27 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
   const revealedRef = useRef(false);
   const autoNextRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset revealedRef on new question
-  useEffect(() => {
-    revealedRef.current = false;
-  }, [state.currentQuestionIndex]);
+  useEffect(() => { revealedRef.current = false; }, [state.currentQuestionIndex]);
 
-  // Timer countdown
   useEffect(() => {
     if (state.showingResult) return;
-
-    timerRef.current = setInterval(() => {
-      onTick();
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    timerRef.current = setInterval(() => onTick(), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [state.showingResult, onTick]);
 
-  // When timer hits 0 or player has answered, trigger reveal
   useEffect(() => {
     if (state.timeLeft <= 0 && !state.showingResult && !revealedRef.current) {
       revealedRef.current = true;
       if (timerRef.current) clearInterval(timerRef.current);
-      // Small delay before revealing
       const t = setTimeout(() => onReveal(), 500);
       return () => clearTimeout(t);
     }
   }, [state.timeLeft, state.showingResult, onReveal]);
 
-  // Auto-advance after result is shown
   useEffect(() => {
     if (state.showingResult) {
-      autoNextRef.current = setTimeout(() => {
-        onNext();
-      }, 5000);
-      return () => {
-        if (autoNextRef.current) clearTimeout(autoNextRef.current);
-      };
+      autoNextRef.current = setTimeout(() => onNext(), 5000);
+      return () => { if (autoNextRef.current) clearTimeout(autoNextRef.current); };
     }
   }, [state.showingResult, onNext]);
 
@@ -78,47 +62,72 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
 
   const timerPercent = (state.timeLeft / 15) * 100;
   const timerColor =
-    state.timeLeft > 10 ? "text-[#00ff88]" :
-    state.timeLeft > 5 ? "text-[#ffcc00]" :
-    "text-[#ff4466]";
-  const timerBarColor =
-    state.timeLeft > 10 ? "bg-[#00ff88]" :
-    state.timeLeft > 5 ? "bg-[#ffcc00]" :
-    "bg-[#ff4466]";
+    state.timeLeft > 10 ? "var(--cc-cyan)" :
+    state.timeLeft > 5 ? "var(--cc-amber)" :
+    "var(--cc-magenta)";
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="flex min-h-screen flex-col lg:flex-row" style={{ background: "var(--cc-dark)" }}>
       {/* Main game area */}
-      <div className="flex-1 flex flex-col px-4 py-6 lg:px-8 lg:py-8">
-        {/* Top bar: Question counter + Timer */}
+      <div className="flex flex-1 flex-col px-4 py-6 lg:px-10 lg:py-8">
+        {/* Top bar */}
         <div className="mb-6 flex items-center justify-between">
+          {/* Question counter */}
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#00ff88]/10 border border-[#00ff88]/30">
-              <Mail className="h-5 w-5 text-[#00ff88]" />
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl"
+              style={{ background: "rgba(0,229,255,0.1)", border: "2px solid rgba(0,229,255,0.2)" }}
+            >
+              <Mail className="h-6 w-6" style={{ color: "var(--cc-cyan)" }} />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.3)" }}>
                 Question
               </p>
-              <p className="text-lg font-black text-foreground">
+              <p className="text-xl font-black" style={{ color: "#fff" }}>
                 {state.currentQuestionIndex + 1}
-                <span className="text-muted-foreground font-semibold"> / {questions.length}</span>
+                <span style={{ color: "rgba(255,255,255,0.25)" }}> / {questions.length}</span>
               </p>
             </div>
+          </div>
+
+          {/* Progress dots */}
+          <div className="hidden items-center gap-1.5 sm:flex">
+            {questions.map((_, i) => (
+              <div
+                key={i}
+                className="h-2 w-2 rounded-full transition-all duration-300"
+                style={{
+                  background: i < state.currentQuestionIndex
+                    ? "var(--cc-cyan)"
+                    : i === state.currentQuestionIndex
+                    ? "#fff"
+                    : "rgba(255,255,255,0.1)",
+                  boxShadow: i === state.currentQuestionIndex ? "0 0 8px rgba(255,255,255,0.4)" : "none",
+                }}
+              />
+            ))}
           </div>
 
           {/* Timer */}
           {!state.showingResult && (
             <div className="flex items-center gap-3">
-              <Clock className={cn("h-5 w-5", timerColor)} />
-              <div className="flex flex-col items-end gap-1">
-                <span className={cn("text-3xl font-black tabular-nums leading-none", timerColor)}>
+              <Clock className="h-5 w-5" style={{ color: timerColor }} />
+              <div className="flex flex-col items-end gap-1.5">
+                <span
+                  className={cn("text-4xl font-black tabular-nums leading-none", state.timeLeft <= 5 && "animate-countdown-pulse")}
+                  style={{ color: timerColor }}
+                >
                   {state.timeLeft}
                 </span>
-                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-secondary">
+                <div className="h-2 w-28 overflow-hidden rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
                   <div
-                    className={cn("h-full rounded-full transition-all duration-1000 ease-linear", timerBarColor)}
-                    style={{ width: `${timerPercent}%` }}
+                    className="h-full rounded-full transition-all duration-1000 ease-linear"
+                    style={{
+                      width: `${timerPercent}%`,
+                      background: timerColor,
+                      boxShadow: `0 0 10px ${timerColor}60`,
+                    }}
                   />
                 </div>
               </div>
@@ -127,23 +136,41 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
         </div>
 
         {/* Email card */}
-        <div className="mb-6 overflow-hidden rounded-2xl border-2 border-border bg-card">
+        <div
+          className="animate-slide-up mb-6 overflow-hidden rounded-3xl border-[3px]"
+          style={{
+            background: "var(--cc-card)",
+            borderColor: "rgba(255,255,255,0.08)",
+          }}
+        >
           {/* Email header */}
-          <div className="border-b-2 border-border bg-secondary/30 px-5 py-4">
+          <div
+            className="px-6 py-4"
+            style={{ borderBottom: "3px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+          >
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">From:</span>
-                <span className="text-sm font-mono font-bold text-foreground">{question.from}</span>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  From
+                </span>
+                <span className="text-sm font-mono font-bold" style={{ color: "var(--cc-cyan)" }}>
+                  {question.from}
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Subject:</span>
-                <span className="text-sm font-bold text-foreground">{question.subject}</span>
+              <div className="flex items-baseline gap-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Subject
+                </span>
+                <span className="text-sm font-bold" style={{ color: "#fff" }}>
+                  {question.subject}
+                </span>
               </div>
             </div>
           </div>
+
           {/* Email body */}
-          <div className="px-5 py-5">
-            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90 font-mono">
+          <div className="px-6 py-6">
+            <p className="whitespace-pre-line font-mono text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>
               {question.message}
             </p>
           </div>
@@ -153,22 +180,33 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
         {!state.showingResult ? (
           <div className="flex flex-col gap-4">
             {state.hasAnswered ? (
-              /* Waiting state */
-              <div className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border bg-card px-6 py-8">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#00ff88]/10">
-                  <Clock className="h-7 w-7 text-[#00ff88] animate-pulse" />
-                </div>
-                <p className="text-lg font-bold text-foreground">Answer Locked In!</p>
-                <p className="text-sm text-muted-foreground">
+              /* Locked in */
+              <div
+                className="animate-pop-in flex flex-col items-center gap-4 rounded-3xl border-[3px] px-8 py-10"
+                style={{
+                  background: "var(--cc-card)",
+                  borderColor: "rgba(255,255,255,0.06)",
+                }}
+              >
+                <Lock className="h-10 w-10 animate-float" style={{ color: "var(--cc-cyan)" }} />
+                <p className="text-2xl font-black uppercase" style={{ color: "#fff" }}>
+                  Locked In!
+                </p>
+                <p className="text-base font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>
                   You chose:{" "}
-                  <span className={cn(
-                    "font-black uppercase",
-                    state.playerAnswer === "phishing" ? "text-[#ff4466]" : "text-[#00ff88]"
-                  )}>
+                  <span
+                    className="font-black uppercase"
+                    style={{ color: state.playerAnswer === "phishing" ? "var(--cc-magenta)" : "var(--cc-lime)" }}
+                  >
                     {state.playerAnswer}
                   </span>
                 </p>
-                <p className="text-xs text-muted-foreground">Waiting for timer to end...</p>
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: "var(--cc-cyan)" }} />
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Waiting for timer...
+                  </span>
+                </div>
               </div>
             ) : (
               /* Answer buttons */
@@ -176,13 +214,27 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
                 <button
                   onClick={() => handleAnswer("phishing")}
                   disabled={state.hasAnswered || state.timeLeft <= 0}
-                  className="group flex flex-col items-center gap-3 rounded-2xl border-3 border-[#ff4466]/30 bg-[#ff4466]/5 px-6 py-8 transition-all duration-200 hover:border-[#ff4466] hover:bg-[#ff4466]/10 hover:shadow-[0_0_40px_rgba(255,68,102,0.15)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  className="jackbox-btn group flex flex-col items-center gap-4 rounded-3xl border-[3px] px-6 py-10 disabled:cursor-not-allowed disabled:opacity-40"
+                  style={{
+                    background: "rgba(255,45,120,0.06)",
+                    borderColor: "rgba(255,45,120,0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--cc-magenta)";
+                    e.currentTarget.style.background = "rgba(255,45,120,0.12)";
+                    e.currentTarget.style.boxShadow = "0 0 50px rgba(255,45,120,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,45,120,0.25)";
+                    e.currentTarget.style.background = "rgba(255,45,120,0.06)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
                 >
-                  <ShieldAlert className="h-10 w-10 text-[#ff4466] transition-transform duration-200 group-hover:scale-110" />
-                  <span className="text-2xl font-black text-[#ff4466] uppercase tracking-wide">
+                  <Fish className="h-12 w-12 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-[-8deg]" style={{ color: "var(--cc-magenta)" }} />
+                  <span className="text-3xl font-black uppercase tracking-wide" style={{ color: "var(--cc-magenta)" }}>
                     Phishing
                   </span>
-                  <span className="text-xs text-muted-foreground font-semibold">
+                  <span className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
                     {"It's a scam!"}
                   </span>
                 </button>
@@ -190,13 +242,27 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
                 <button
                   onClick={() => handleAnswer("legitimate")}
                   disabled={state.hasAnswered || state.timeLeft <= 0}
-                  className="group flex flex-col items-center gap-3 rounded-2xl border-3 border-[#00ff88]/30 bg-[#00ff88]/5 px-6 py-8 transition-all duration-200 hover:border-[#00ff88] hover:bg-[#00ff88]/10 hover:shadow-[0_0_40px_rgba(0,255,136,0.15)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                  className="jackbox-btn group flex flex-col items-center gap-4 rounded-3xl border-[3px] px-6 py-10 disabled:cursor-not-allowed disabled:opacity-40"
+                  style={{
+                    background: "rgba(57,255,20,0.04)",
+                    borderColor: "rgba(57,255,20,0.25)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--cc-lime)";
+                    e.currentTarget.style.background = "rgba(57,255,20,0.10)";
+                    e.currentTarget.style.boxShadow = "0 0 50px rgba(57,255,20,0.12)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(57,255,20,0.25)";
+                    e.currentTarget.style.background = "rgba(57,255,20,0.04)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
                 >
-                  <ShieldCheck className="h-10 w-10 text-[#00ff88] transition-transform duration-200 group-hover:scale-110" />
-                  <span className="text-2xl font-black text-[#00ff88] uppercase tracking-wide">
+                  <ShieldCheck className="h-12 w-12 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-[8deg]" style={{ color: "var(--cc-lime)" }} />
+                  <span className="text-3xl font-black uppercase tracking-wide" style={{ color: "var(--cc-lime)" }}>
                     Legit
                   </span>
-                  <span className="text-xs text-muted-foreground font-semibold">
+                  <span className="text-xs font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
                     {"It's real!"}
                   </span>
                 </button>
@@ -207,38 +273,39 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
           /* Results display */
           <div className="flex flex-col gap-4">
             {/* Correct/Incorrect banner */}
-            <div className={cn(
-              "flex items-center gap-4 rounded-2xl border-2 px-6 py-5",
-              state.wasCorrect === true
-                ? "border-[#00ff88]/50 bg-[#00ff88]/5"
-                : state.wasCorrect === false
-                ? "border-[#ff4466]/50 bg-[#ff4466]/5"
-                : "border-[#ffcc00]/50 bg-[#ffcc00]/5"
-            )}>
+            <div
+              className="animate-pop-in flex items-center gap-5 rounded-3xl border-[3px] px-6 py-6"
+              style={{
+                background: state.wasCorrect === true
+                  ? "rgba(57,255,20,0.06)"
+                  : state.wasCorrect === false
+                  ? "rgba(255,45,120,0.06)"
+                  : "rgba(255,184,0,0.06)",
+                borderColor: state.wasCorrect === true
+                  ? "rgba(57,255,20,0.3)"
+                  : state.wasCorrect === false
+                  ? "rgba(255,45,120,0.3)"
+                  : "rgba(255,184,0,0.3)",
+              }}
+            >
               {state.wasCorrect === true ? (
-                <CheckCircle2 className="h-8 w-8 text-[#00ff88] shrink-0" />
+                <CheckCircle2 className="h-10 w-10 shrink-0" style={{ color: "var(--cc-lime)" }} />
               ) : state.wasCorrect === false ? (
-                <XCircle className="h-8 w-8 text-[#ff4466] shrink-0" />
+                <XCircle className="h-10 w-10 shrink-0" style={{ color: "var(--cc-magenta)" }} />
               ) : (
-                <AlertTriangle className="h-8 w-8 text-[#ffcc00] shrink-0" />
+                <AlertTriangle className="h-10 w-10 shrink-0" style={{ color: "var(--cc-amber)" }} />
               )}
               <div>
-                <p className={cn(
-                  "text-lg font-black",
-                  state.wasCorrect === true ? "text-[#00ff88]" : state.wasCorrect === false ? "text-[#ff4466]" : "text-[#ffcc00]"
-                )}>
-                  {state.wasCorrect === true
-                    ? "Correct!"
-                    : state.wasCorrect === false
-                    ? "Incorrect!"
-                    : "Time's Up!"}
+                <p className="text-2xl font-black uppercase" style={{
+                  color: state.wasCorrect === true ? "var(--cc-lime)" : state.wasCorrect === false ? "var(--cc-magenta)" : "var(--cc-amber)",
+                }}>
+                  {state.wasCorrect === true ? "Correct!" : state.wasCorrect === false ? "Wrong!" : "Time's Up!"}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>
                   The answer was{" "}
-                  <span className={cn(
-                    "font-black uppercase",
-                    state.correctAnswer === "phishing" ? "text-[#ff4466]" : "text-[#00ff88]"
-                  )}>
+                  <span className="font-black uppercase" style={{
+                    color: state.correctAnswer === "phishing" ? "var(--cc-magenta)" : "var(--cc-lime)",
+                  }}>
                     {state.correctAnswer}
                   </span>
                 </p>
@@ -247,13 +314,20 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
 
             {/* Hint card */}
             {state.currentHint && (
-              <div className="flex gap-3 rounded-2xl border-2 border-[#ffcc00]/20 bg-[#ffcc00]/5 px-5 py-4">
-                <Lightbulb className="h-5 w-5 shrink-0 text-[#ffcc00] mt-0.5" />
+              <div
+                className="animate-slide-up flex gap-4 rounded-3xl border-[3px] px-6 py-5"
+                style={{
+                  background: "rgba(255,184,0,0.04)",
+                  borderColor: "rgba(255,184,0,0.15)",
+                  animationDelay: "0.15s",
+                }}
+              >
+                <Lightbulb className="h-6 w-6 shrink-0 mt-0.5" style={{ color: "var(--cc-amber)" }} />
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-[#ffcc00] mb-1">
-                    Why?
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: "var(--cc-amber)" }}>
+                    Learn Why
                   </p>
-                  <p className="text-sm leading-relaxed text-foreground/80">
+                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
                     {state.currentHint}
                   </p>
                 </div>
@@ -263,9 +337,14 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
             {/* Next button */}
             <button
               onClick={onNext}
-              className="flex items-center justify-center gap-2 rounded-2xl bg-[#00ff88] px-6 py-4 text-lg font-black uppercase tracking-wider text-[#0a0e14] transition-all duration-200 hover:shadow-[0_0_30px_rgba(0,255,136,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+              className="jackbox-btn flex items-center justify-center gap-3 rounded-2xl px-6 py-5 text-lg"
+              style={{
+                background: "var(--cc-cyan)",
+                color: "var(--cc-dark)",
+                boxShadow: "0 4px 30px rgba(0,229,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+              }}
             >
-              {state.currentQuestionIndex < questions.length - 1 ? "Next Question" : "See Results"}
+              {state.currentQuestionIndex < questions.length - 1 ? "NEXT QUESTION" : "SEE RESULTS"}
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
@@ -273,12 +352,15 @@ export function GameScreen({ state, onAnswer, onReveal, onNext, onTick }: GameSc
       </div>
 
       {/* Sidebar leaderboard (desktop) */}
-      <div className="hidden lg:flex w-80 shrink-0 flex-col border-l-2 border-border bg-card/50 p-6">
+      <div
+        className="hidden w-80 shrink-0 flex-col p-6 lg:flex"
+        style={{ borderLeft: "3px solid rgba(255,255,255,0.04)", background: "rgba(0,0,0,0.2)" }}
+      >
         <Leaderboard players={state.players} myPlayerId={state.myPlayerId} />
       </div>
 
-      {/* Mobile leaderboard (below game area) */}
-      <div className="lg:hidden px-4 pb-6">
+      {/* Mobile leaderboard */}
+      <div className="px-4 pb-6 lg:hidden">
         <Leaderboard players={state.players} myPlayerId={state.myPlayerId} compact />
       </div>
     </div>
