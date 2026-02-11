@@ -87,26 +87,9 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
     };
   }, [enabled, roomId, playerId, poll]);
 
-  // Send leave on tab close / page unload
-  useEffect(() => {
-    if (!enabled || !roomId || !playerId) return;
-
-    const handleUnload = () => {
-      const rid = roomIdRef.current;
-      const pid = playerIdRef.current;
-      if (!rid || !pid) return;
-
-      // Use sendBeacon with Blob for reliable delivery with correct content type
-      const payload = JSON.stringify({ action: "leave", roomId: rid, playerId: pid });
-      const blob = new Blob([payload], { type: "application/json" });
-      navigator.sendBeacon("/api/game/action", blob);
-    };
-
-    window.addEventListener("beforeunload", handleUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-    };
-  }, [enabled, roomId, playerId]);
+  // Do NOT send leave on page refresh/unload - session is persisted
+  // so the player can reconnect after refresh. Leave is only sent
+  // explicitly via the "Leave Game" button.
 
   const sendAction = useCallback(
     async (action: string, extra?: Record<string, unknown>) => {

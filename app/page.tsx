@@ -8,15 +8,53 @@ import { GameScreen } from "@/components/cyber-clash/game-screen";
 import { GameOverScreen } from "@/components/cyber-clash/game-over-screen";
 import { LogOut } from "lucide-react";
 
-export default function CyberShieldPage() {
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const [playerId, setPlayerId] = useState<string | null>(null);
+const SESSION_KEY_ROOM = "cybershield_roomId";
+const SESSION_KEY_PLAYER = "cybershield_playerId";
 
-  const { room, sendAction, departedPlayers, dismissDeparted } = useGameRoom({
+function getSessionValue(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export default function CyberShieldPage() {
+  const [roomId, setRoomId] = useState<string | null>(() => getSessionValue(SESSION_KEY_ROOM));
+  const [playerId, setPlayerId] = useState<string | null>(() => getSessionValue(SESSION_KEY_PLAYER));
+
+  // Persist roomId and playerId to sessionStorage
+  useEffect(() => {
+    try {
+      if (roomId) {
+        sessionStorage.setItem(SESSION_KEY_ROOM, roomId);
+      } else {
+        sessionStorage.removeItem(SESSION_KEY_ROOM);
+      }
+      if (playerId) {
+        sessionStorage.setItem(SESSION_KEY_PLAYER, playerId);
+      } else {
+        sessionStorage.removeItem(SESSION_KEY_PLAYER);
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+  }, [roomId, playerId]);
+
+  const { room, error, sendAction, departedPlayers, dismissDeparted } = useGameRoom({
     roomId,
     playerId,
     enabled: !!roomId && !!playerId,
   });
+
+  // If we restored from session but room no longer exists, clear state and go to join
+  useEffect(() => {
+    if (error && roomId && playerId) {
+      setRoomId(null);
+      setPlayerId(null);
+    }
+  }, [error, roomId, playerId]);
 
   // Auto-dismiss departure toasts after 4 seconds
   useEffect(() => {
@@ -74,6 +112,12 @@ export default function CyberShieldPage() {
     await sendAction("leave");
     setRoomId(null);
     setPlayerId(null);
+    try {
+      sessionStorage.removeItem(SESSION_KEY_ROOM);
+      sessionStorage.removeItem(SESSION_KEY_PLAYER);
+    } catch {
+      // ignore
+    }
   }, [sendAction]);
 
   // No room yet -- show join screen
@@ -123,11 +167,11 @@ export default function CyberShieldPage() {
 
       {/* Player departure toasts */}
       {departedPlayers.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2">
+        <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:bottom-6 sm:w-auto sm:max-w-none">
           {departedPlayers.map((d) => (
             <div
               key={d.id}
-              className="flex items-center gap-3 rounded-2xl border-[3px] px-5 py-3 shadow-2xl"
+              className="flex items-center gap-2 rounded-xl border-[3px] px-3 py-2 shadow-2xl sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-3"
               style={{
                 background: "rgba(11,15,26,0.95)",
                 borderColor: "rgba(255,45,120,0.3)",
