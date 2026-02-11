@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Trophy, RotateCcw, Crown, Star, Medal, Sparkles, Shield, Home } from "lucide-react";
+import { Trophy, RotateCcw, Crown, Star, Medal, Sparkles, Shield, Home, Flame, Zap, Fish, ShieldCheck } from "lucide-react";
 import type { Player } from "@/lib/game-room";
 
 interface GameOverScreenProps {
@@ -14,16 +14,19 @@ interface GameOverScreenProps {
 const AVATAR_COLORS = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#F97316", "#06B6D4", "#EC4899"];
 const RANK_COLORS = ["#FFB800", "#A0AEC0", "#CD7F32"];
 
-function ConfettiPiece({ delay, color, left }: { delay: number; color: string; left: number }) {
+function ConfettiPiece({ delay, color, left, size }: { delay: number; color: string; left: number; size: number }) {
+  const shape = Math.random() > 0.5 ? "rounded-full" : "rounded-sm";
   return (
     <div
-      className="pointer-events-none absolute top-0 h-3 w-3 rounded-sm"
+      className={`pointer-events-none absolute top-0 ${shape}`}
       aria-hidden="true"
       style={{
         left: `${left}%`,
+        width: size,
+        height: size,
         background: color,
-        animation: `confetti-fall ${2 + Math.random() * 2}s linear ${delay}s infinite`,
-        opacity: 0.7,
+        animation: `confetti-fall ${2.5 + Math.random() * 2.5}s linear ${delay}s infinite`,
+        opacity: 0.7 + Math.random() * 0.3,
       }}
     />
   );
@@ -47,12 +50,13 @@ export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: Gam
 
   const confettiPieces = useMemo(() => {
     const pieces = [];
-    const colors = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7"];
-    for (let i = 0; i < 30; i++) {
+    const colors = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#F97316"];
+    for (let i = 0; i < 50; i++) {
       pieces.push({
-        delay: Math.random() * 3,
+        delay: Math.random() * 4,
         color: colors[i % colors.length],
         left: Math.random() * 100,
+        size: 6 + Math.random() * 8,
       });
     }
     return pieces;
@@ -60,17 +64,29 @@ export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: Gam
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-8" style={{ background: "var(--cc-dark)" }}>
-      {/* Confetti for winner */}
+      {/* Confetti */}
       {isWinner && confettiPieces.map((piece, i) => (
         <ConfettiPiece key={i} {...piece} />
       ))}
 
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true" style={{
-        background: isWinner
-          ? "radial-gradient(ellipse at 50% 30%, rgba(255,184,0,0.08) 0%, transparent 50%)"
-          : "radial-gradient(ellipse at 50% 30%, rgba(0,229,255,0.06) 0%, transparent 50%)",
-      }} />
+      {/* Background elements */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div style={{
+          position: "absolute", inset: 0,
+          background: isWinner
+            ? "radial-gradient(ellipse at 50% 30%, rgba(255,184,0,0.08) 0%, transparent 50%)"
+            : "radial-gradient(ellipse at 50% 30%, rgba(0,229,255,0.06) 0%, transparent 50%)",
+        }} />
+        <div className="absolute inset-0 opacity-[0.015]" style={{
+          backgroundImage: "linear-gradient(rgba(0,229,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }} />
+        {/* Floating icons */}
+        <Fish className="absolute left-[8%] top-[15%] h-8 w-8 animate-float opacity-[0.06]" style={{ color: "#FF2D78" }} />
+        <ShieldCheck className="absolute right-[10%] top-[22%] h-7 w-7 animate-float opacity-[0.06]" style={{ color: "#39FF14", animationDelay: "1.2s" }} />
+        <Zap className="absolute left-[20%] bottom-[15%] h-8 w-8 animate-float opacity-[0.05]" style={{ color: "#FFB800", animationDelay: "0.8s" }} />
+        <Shield className="absolute right-[20%] bottom-[20%] h-7 w-7 animate-float opacity-[0.05]" style={{ color: "#00E5FF", animationDelay: "2s" }} />
+      </div>
 
       <div className={`relative z-10 w-full max-w-lg transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
         {/* Trophy */}
@@ -96,19 +112,21 @@ export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: Gam
                   <Star className="absolute -top-3 -left-3 h-7 w-7 animate-float" style={{ color: "#FFB800" }} />
                   <Star className="absolute -top-1 -right-4 h-5 w-5 animate-float-delayed" style={{ color: "#00E5FF" }} />
                   <Sparkles className="absolute -bottom-2 left-1/2 h-5 w-5 animate-float" style={{ color: "#FF2D78" }} />
+                  <Flame className="absolute -bottom-3 -left-2 h-5 w-5 animate-float-delayed" style={{ color: "#F97316" }} />
+                  <Zap className="absolute -top-4 left-1/2 h-5 w-5 animate-float" style={{ color: "#39FF14" }} />
                 </>
               )}
             </div>
           </div>
 
-          <h2 className="text-6xl font-black uppercase tracking-tighter" style={{ color: "#fff" }}>
+          <h2 className="text-balance text-6xl font-black uppercase tracking-tighter" style={{ color: "#fff" }}>
             Game<br />
             <span style={{ color: isWinner ? "#FFB800" : "#00E5FF" }}>Over</span>
           </h2>
 
           {isWinner ? (
-            <p className="mt-3 text-xl font-black uppercase tracking-wider" style={{ color: "#FFB800" }}>
-              You are the champion!
+            <p className="mt-3 flex items-center justify-center gap-2 text-xl font-black uppercase tracking-wider" style={{ color: "#FFB800" }}>
+              <Sparkles className="h-5 w-5" /> You are the champion! <Sparkles className="h-5 w-5" />
             </p>
           ) : (
             <p className="mt-3 text-lg font-bold" style={{ color: "rgba(255,255,255,0.5)" }}>

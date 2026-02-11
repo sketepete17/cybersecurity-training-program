@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Copy, Check, Users, Zap, Shield, Crown, Loader2 } from "lucide-react";
+import { Copy, Check, Users, Zap, Shield, Crown, Loader2, Fish, ShieldCheck, Sparkles, Mail, Lock } from "lucide-react";
 import type { GameRoom } from "@/lib/game-room";
 
 const AVATAR_COLORS = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#F97316", "#06B6D4", "#EC4899"];
@@ -49,18 +49,33 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
   const isCountdown = room.status === "countdown";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4" style={{ background: "var(--cc-dark)" }}>
-      {/* Background */}
-      <div className="pointer-events-none fixed inset-0" aria-hidden="true" style={{
-        background: "radial-gradient(ellipse at 50% 40%, rgba(0,229,255,0.04) 0%, transparent 60%)",
-      }} />
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4" style={{ background: "var(--cc-dark)" }}>
+      {/* Animated background */}
+      <div className="pointer-events-none fixed inset-0" aria-hidden="true">
+        <div className="absolute inset-0" style={{
+          background: "radial-gradient(ellipse at 50% 40%, rgba(0,229,255,0.04) 0%, transparent 60%)",
+        }} />
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: "linear-gradient(rgba(0,229,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }} />
+        {/* Floating icons */}
+        <Fish className="absolute left-[5%] top-[18%] h-8 w-8 animate-float opacity-[0.05]" style={{ color: "#FF2D78" }} />
+        <ShieldCheck className="absolute right-[8%] top-[25%] h-7 w-7 animate-float opacity-[0.05]" style={{ color: "#39FF14", animationDelay: "1s" }} />
+        <Mail className="absolute left-[15%] bottom-[20%] h-7 w-7 animate-float opacity-[0.05]" style={{ color: "#00E5FF", animationDelay: "2s" }} />
+        <Lock className="absolute right-[15%] bottom-[30%] h-8 w-8 animate-float opacity-[0.05]" style={{ color: "#FFB800", animationDelay: "0.5s" }} />
+        <Sparkles className="absolute right-[40%] top-[10%] h-6 w-6 animate-float opacity-[0.05]" style={{ color: "#A855F7", animationDelay: "1.5s" }} />
+      </div>
 
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center gap-8">
         {/* Room code card */}
         <div className="flex w-full flex-col items-center gap-3">
-          <p className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Room Code
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: "#39FF14" }} />
+            <p className="text-xs font-black tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Room Code
+            </p>
+          </div>
           <button
             onClick={copyCode}
             className="group flex items-center gap-4 rounded-2xl border-[3px] px-8 py-5 transition-all duration-200 hover:border-[#00E5FF]"
@@ -135,8 +150,10 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
                     </p>
                   </div>
 
-                  {/* Status dot */}
-                  <div className="flex h-3 w-3 rounded-full" style={{ background: "#39FF14", boxShadow: "0 0 8px rgba(57,255,20,0.5)" }} />
+                  {/* Animated status dot */}
+                  <div className="relative flex h-3 w-3 rounded-full" style={{ background: "#39FF14", boxShadow: "0 0 8px rgba(57,255,20,0.5)" }}>
+                    <div className="absolute inset-0 animate-ping rounded-full" style={{ background: "#39FF14", opacity: 0.3 }} />
+                  </div>
                 </div>
               );
             })}
@@ -159,7 +176,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
         {/* Countdown or Start button */}
         {isCountdown && countdownDisplay !== null ? (
           <div className="flex flex-col items-center gap-4">
-            <div className="relative flex h-28 w-28 items-center justify-center">
+            <div className="relative flex h-32 w-32 items-center justify-center">
               <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
                 <circle
@@ -169,12 +186,14 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
                   style={{ transition: "stroke-dasharray 0.3s linear", filter: "drop-shadow(0 0 8px rgba(0,229,255,0.5))" }}
                 />
               </svg>
-              <span className="text-5xl font-black tabular-nums animate-countdown-pulse" style={{ color: "#00E5FF" }}>
+              <span className="text-6xl font-black tabular-nums animate-countdown-pulse" style={{ color: "#00E5FF" }}>
                 {countdownDisplay}
               </span>
             </div>
-            <p className="text-sm font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <p className="flex items-center gap-2 text-sm font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <Sparkles className="h-4 w-4 animate-float" style={{ color: "#FFB800" }} />
               Game starting...
+              <Sparkles className="h-4 w-4 animate-float-delayed" style={{ color: "#FFB800" }} />
             </p>
           </div>
         ) : isHost ? (
