@@ -1,6 +1,6 @@
 import React from "react"
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/components/ui/toast";
@@ -9,28 +9,24 @@ import { CTFProvider } from "@/lib/ctf-store";
 import { MobileSidebarProvider } from "@/components/training/sidebar";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
   title: {
-    default: "CyberShield - Security Awareness Training",
-    template: "%s | CyberShield",
+    default: "Cyber Clash - Phish or Legit?",
+    template: "%s | Cyber Clash",
   },
   description:
-    "Empowering employees with practical cybersecurity skills through role-based, interactive training modules. Protect your organization from cyber threats.",
-  keywords: ["cybersecurity", "security awareness", "training", "phishing prevention", "data protection"],
+    "A multiplayer party game for cybersecurity awareness. Read suspicious emails, spot phishing attacks, and outscore your opponents.",
+  keywords: ["cybersecurity", "phishing", "game", "training", "multiplayer", "party game"],
   authors: [{ name: "CyberShield" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "CyberShield",
-    title: "CyberShield - Security Awareness Training",
-    description: "Interactive cybersecurity training for modern organizations",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "CyberShield - Security Awareness Training",
-    description: "Interactive cybersecurity training for modern organizations",
+    siteName: "Cyber Clash",
+    title: "Cyber Clash - Phish or Legit?",
+    description: "A multiplayer party game for cybersecurity awareness training",
   },
   robots: {
     index: true,
@@ -57,10 +53,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#0B0F1A",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -73,8 +66,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} font-sans antialiased`}>
-        {/* Skip link for accessibility */}
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <a 
           href="#main-content" 
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"
