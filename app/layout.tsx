@@ -44,10 +44,11 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.className} ${jetbrainsMono.variable} font-sans antialiased`}
         style={{ background: "#0B0F1A" }}
+        suppressHydrationWarning
       >
         <a
           href="#main-content"
