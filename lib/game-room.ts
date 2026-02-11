@@ -36,6 +36,9 @@ export interface Question {
   isPhishing: boolean;
   explanation: string;
   clues: string[];
+  difficulty: "easy" | "medium" | "hard";
+  category: string;
+  funFact: string;
 }
 
 // ─── Question Bank ───────────────────────────────────────────────────────────
@@ -50,6 +53,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: true,
     explanation: "This is phishing. The sender domain 'c0mpany-support.net' uses a zero instead of 'o', the link goes to a suspicious .tk domain, and the extreme urgency is a classic social engineering tactic.",
     clues: ["Misspelled sender domain (c0mpany)", "Suspicious .tk link", "Extreme urgency & threats", "Generic greeting"],
+    difficulty: "easy",
+    category: "Credential Theft",
+    funFact: "91% of cyberattacks begin with a phishing email. The .tk domain is one of the most abused top-level domains in the world.",
   },
   {
     id: 2,
@@ -60,6 +66,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: false,
     explanation: "This is legitimate. The email comes from an internal company domain, references a specific meeting with concrete details, has a professional tone, and doesn't ask for credentials or urgent clicks.",
     clues: ["Internal company domain", "Specific meeting details", "No suspicious links", "Professional tone"],
+    difficulty: "easy",
+    category: "Internal Comms",
+    funFact: "Only 3% of phishing emails come from internal-looking company domains. Specific details like percentages and names are a strong sign of legitimacy.",
   },
   {
     id: 3,
@@ -70,6 +79,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: true,
     explanation: "This is phishing. 'microsft-365.com' is misspelled (missing the 'o' in Microsoft). Legitimate Microsoft emails come from microsoft.com. The threat of automatic file deletion is a pressure tactic.",
     clues: ["Misspelled 'microsft' in domain", "Fake upgrade link", "Threat of data loss", "Not from microsoft.com"],
+    difficulty: "medium",
+    category: "Brand Impersonation",
+    funFact: "Microsoft is the most impersonated brand in phishing attacks, followed by Google and Apple. Always check the exact domain spelling.",
   },
   {
     id: 4,
@@ -80,6 +92,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: false,
     explanation: "This is legitimate. It comes from a real amazon.com domain, references specific billing details, and directs you to log into the console yourself rather than providing a suspicious link.",
     clues: ["Legitimate amazon.com domain", "Specific billing details", "No direct login link", "Directs to console"],
+    difficulty: "medium",
+    category: "Billing & Finance",
+    funFact: "Real billing emails from AWS, Google Cloud, and Azure never include direct payment links. They always direct you to log in to the console yourself.",
   },
   {
     id: 5,
@@ -90,6 +105,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: true,
     explanation: "This is phishing. Real HR departments don't ask for banking details via email links. The external domain 'company-hr-portal.org' isn't a real company domain, and the same-day deadline creates false urgency.",
     clues: ["External non-company domain", "Asks for banking details via link", "Same-day deadline pressure", "Generic 'Valued Employee'"],
+    difficulty: "easy",
+    category: "Payroll Scam",
+    funFact: "Business Email Compromise (BEC) scams cost companies $2.7 billion in 2022. HR and payroll are the most targeted departments.",
   },
   {
     id: 6,
@@ -100,6 +118,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: false,
     explanation: "This is legitimate. It comes from the real slack.com domain, contains a natural conversational message, and doesn't include any suspicious links or urgent demands.",
     clues: ["Real slack.com domain", "Natural conversation", "Standard notification format", "No suspicious links"],
+    difficulty: "easy",
+    category: "SaaS Notification",
+    funFact: "Legitimate SaaS notifications are the hardest for phishers to fake perfectly because they contain specific, contextual information about your work.",
   },
   {
     id: 7,
@@ -110,6 +131,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: true,
     explanation: "This is phishing. Apple's real domain is apple.com, not 'apple-id-verify.com'. The threat of permanent disabling and losing purchases is an extreme scare tactic. Apple never sends verification links this way.",
     clues: ["Fake domain 'apple-id-verify.com'", "Extreme threats", "Suspicious verification link", "Generic 'Dear Customer'"],
+    difficulty: "medium",
+    category: "Account Takeover",
+    funFact: "Apple never sends emails asking you to verify your identity via a link. If your account is locked, you can only unlock it through appleid.apple.com directly.",
   },
   {
     id: 8,
@@ -120,6 +144,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: false,
     explanation: "This is legitimate. It comes from GitHub's real domain, contains a detailed and specific bug report with steps to reproduce, and follows standard GitHub issue notification formatting.",
     clues: ["Real github.com domain", "Specific technical details", "Standard GitHub format", "No suspicious links"],
+    difficulty: "hard",
+    category: "Developer Tools",
+    funFact: "GitHub is increasingly targeted by supply-chain attacks. However, their real notifications always come from github.com and contain repo-specific details.",
   },
   {
     id: 9,
@@ -130,6 +157,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: true,
     explanation: "This is phishing. FedEx uses fedex.com, not 'fedex-notifications.info'. The request to download a form is a common malware tactic, and the return-to-sender threat creates false urgency.",
     clues: ["Fake domain 'fedex-notifications.info'", "Download form request (malware risk)", "48-hour pressure", "Not from fedex.com"],
+    difficulty: "medium",
+    category: "Delivery Scam",
+    funFact: "Delivery scams spike 400% during holiday seasons. FedEx, UPS, and USPS never ask you to download forms -- only reschedule through their official app or website.",
   },
   {
     id: 10,
@@ -140,6 +170,9 @@ export const QUESTION_BANK: Question[] = [
     isPhishing: false,
     explanation: "This is legitimate. It comes from a valid atlassian.net subdomain, references specific project details, ticket numbers, and a natural team conversation about scheduling.",
     clues: ["Valid atlassian.net domain", "Specific ticket number", "Natural team conversation", "Standard Jira format"],
+    difficulty: "hard",
+    category: "Project Management",
+    funFact: "Atlassian notifications are among the safest automated emails because they include unique ticket IDs and project-specific context that attackers rarely replicate.",
   },
 ];
 
@@ -332,6 +365,12 @@ export async function submitAnswer(
 
   player.answers.push(correct);
   player.lastAnswerTime = Date.now();
+
+  // Auto-reveal results when ALL players have answered (no waiting for timer)
+  const allAnswered = room.players.every((p) => p.answers.length > questionIndex);
+  if (allAnswered) {
+    room.status = "showing_results";
+  }
 
   await saveRoom(room);
   return room;

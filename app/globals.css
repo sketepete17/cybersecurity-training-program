@@ -194,6 +194,13 @@
   100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
 
+@keyframes score-fly {
+  0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+  30% { opacity: 1; transform: scale(1.2) translateY(-5px); }
+  50% { transform: scale(1) translateY(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
