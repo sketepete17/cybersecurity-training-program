@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Flag,
+  Gamepad2,
 } from "lucide-react";
 
 // Mobile sidebar context
@@ -41,6 +42,7 @@ const userNavItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/modules", label: "Training Modules", icon: BookOpen },
   { href: "/ctf", label: "CTF Practice", icon: Flag },
+  { href: "/cyber-clash", label: "Cyber Clash", icon: Gamepad2 },
   { href: "/progress", label: "My Progress", icon: Trophy },
   { href: "/certificates", label: "Certificates", icon: Award },
 ];
@@ -54,6 +56,7 @@ const adminNavItems = [
   { href: "/admin/reports", label: "Reports", icon: FileText },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/ctf", label: "CTF Practice", icon: Flag },
+  { href: "/cyber-clash", label: "Cyber Clash", icon: Gamepad2 },
 ];
 
 // Shared bottom navigation
