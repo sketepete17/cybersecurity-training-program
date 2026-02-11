@@ -15,15 +15,15 @@ interface LobbyScreenProps {
   onStartGame: () => void;
 }
 
+const PUBLIC_DOMAIN = "https://cybertrain.work";
+
 export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartGame }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false);
   const [countdownDisplay, setCountdownDisplay] = useState<number | null>(null);
   const [showQR, setShowQR] = useState(true);
 
-  // Build the join URL with room code (use full URL including pathname for correct routing)
-  const joinUrl = typeof window !== "undefined"
-    ? `${window.location.origin}${window.location.pathname}?code=${room.id}`
-    : "";
+  // Always use the real public domain for QR codes
+  const joinUrl = `${PUBLIC_DOMAIN}?code=${room.id}`;
 
   const copyCode = useCallback(async () => {
     try {

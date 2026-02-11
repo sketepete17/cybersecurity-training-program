@@ -3,6 +3,7 @@ import {
   startCountdown,
   startGame,
   submitAnswer,
+  submitBattlePassword,
   nextQuestion,
   showResults,
   resetRoom,
@@ -36,6 +37,13 @@ export async function POST(req: Request) {
         break;
       }
 
+      case "battle_submit": {
+        const bIdx = Number(body.questionIndex);
+        const password = String(body.password ?? "");
+        room = await submitBattlePassword(roomId, playerId, bIdx, password);
+        break;
+      }
+
       case "show_results":
         room = await showResults(roomId, playerId);
         break;
@@ -61,6 +69,13 @@ export async function POST(req: Request) {
     }
 
     if (!room) {
+      // For show_results / next_question, the room might have already transitioned
+      // Return a fresh read instead of failing
+      if (action === "show_results" || action === "next_question") {
+        const { getRoom } = await import("@/lib/game-room");
+        const fallback = await getRoom(body.roomId);
+        if (fallback) return NextResponse.json({ room: fallback });
+      }
       return NextResponse.json({ error: "Action failed" }, { status: 400 });
     }
 

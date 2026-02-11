@@ -29,7 +29,7 @@ export interface GameRoom {
 
 // ─── Round Types (discriminated union) ───────────────────────────────────────
 
-export type GameRound = PhishRound | PasswordRound | SpotURLRound;
+export type GameRound = PhishRound | PasswordRound | SpotURLRound | PasswordBattleRound;
 
 interface BaseRound {
   id: number;
@@ -37,6 +37,14 @@ interface BaseRound {
   category: string;
   funFact: string;
   explanation: string;
+}
+
+// Password Battle: two players create passwords for a scenario, auto-scored by strength
+export interface PasswordBattleRound extends BaseRound {
+  type: "password_battle";
+  scenario: string;                // The prompt/scenario for the password
+  challengerIds: [string, string]; // filled at game start
+  submissions: Record<string, { password: string; score: number; breakdown: PasswordScoreBreakdown }>;
 }
 
 export interface PhishRound extends BaseRound {
@@ -64,6 +72,124 @@ export interface SpotURLRound extends BaseRound {
   correctIndex: number;
   clues: string[];
 }
+
+export interface PasswordScoreBreakdown {
+  length: number;
+  uppercase: number;
+  lowercase: number;
+  numbers: number;
+  symbols: number;
+  entropy: number;
+  dictionaryPenalty: number;
+  patternPenalty: number;
+  total: number;
+}
+
+// Common password fragments / dictionary words to penalize
+const COMMON_WORDS = [
+  "password", "pass", "1234", "qwerty", "admin", "login", "welcome",
+  "monkey", "dragon", "master", "abc", "letmein", "iloveyou", "trustno1",
+  "shadow", "sunshine", "princess", "football", "baseball", "soccer",
+  "hockey", "batman", "superman", "hello", "charlie", "access",
+];
+
+const KEYBOARD_PATTERNS = [
+  "qwerty", "qwertz", "asdfgh", "zxcvbn", "123456", "654321",
+  "abcdef", "fedcba", "!@#$%", "098765", "567890",
+];
+
+function scorePassword(password: string): PasswordScoreBreakdown {
+  const len = password.length;
+
+  // Character class checks
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNum = /[0-9]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+  // Length score: 0-30 points
+  const lengthScore = Math.min(30, len * 2);
+
+  // Char diversity: up to 10 each = 40 max
+  const upperScore = hasUpper ? 10 : 0;
+  const lowerScore = hasLower ? 10 : 0;
+  const numScore = hasNum ? 10 : 0;
+  const symbolScore = hasSymbol ? 10 : 0;
+
+  // Entropy estimate: unique chars / length ratio * 20 = up to 20 points
+  const uniqueChars = new Set(password.split("")).size;
+  const entropyScore = Math.min(20, Math.round((uniqueChars / Math.max(len, 1)) * 20));
+
+  // Dictionary penalty: -15 per common word found
+  const lower = password.toLowerCase();
+  let dictPenalty = 0;
+  for (const word of COMMON_WORDS) {
+    if (lower.includes(word)) dictPenalty += 15;
+  }
+
+  // Pattern penalty: -10 per keyboard/sequential pattern
+  let patternPenalty = 0;
+  for (const pat of KEYBOARD_PATTERNS) {
+    if (lower.includes(pat)) patternPenalty += 10;
+  }
+
+  // Repeated character penalty: if >50% are the same char
+  const charFreq: Record<string, number> = {};
+  for (const c of password) charFreq[c] = (charFreq[c] || 0) + 1;
+  const maxFreq = Math.max(...Object.values(charFreq));
+  if (maxFreq > len * 0.5) patternPenalty += 10;
+
+  const total = Math.max(0, Math.min(100,
+    lengthScore + upperScore + lowerScore + numScore + symbolScore + entropyScore - dictPenalty - patternPenalty
+  ));
+
+  return {
+    length: lengthScore,
+    uppercase: upperScore,
+    lowercase: lowerScore,
+    numbers: numScore,
+    symbols: symbolScore,
+    entropy: entropyScore,
+    dictionaryPenalty: dictPenalty,
+    patternPenalty,
+    total,
+  };
+}
+
+// ─── Password Battle Scenario Bank ─────────────────────────────────────────
+
+const BATTLE_SCENARIOS = [
+  {
+    id: 301, scenario: "Create a password for your company email that you'll use every day.",
+    funFact: "The average person has 100+ online accounts. Using a unique, strong password for each one (with a password manager) is the best defense.",
+    explanation: "A strong daily-use password should be long, memorable, and unique. Passphrases combining random words with symbols work great.",
+  },
+  {
+    id: 302, scenario: "Create a password for your online banking account.",
+    funFact: "Financial accounts are targeted 3x more than other accounts. Banks report that 80% of breaches involve weak or reused passwords.",
+    explanation: "Banking passwords need maximum security. Use 16+ characters with mixed types and never reuse them anywhere else.",
+  },
+  {
+    id: 303, scenario: "Create a Wi-Fi password for your office network that guests might need.",
+    funFact: "A weak Wi-Fi password can let attackers intercept all traffic on the network. WPA3 with a strong password is the gold standard.",
+    explanation: "Wi-Fi passwords should be long but shareable. A random passphrase of 4-5 words works well since you can tell it verbally.",
+  },
+  {
+    id: 304, scenario: "Create a master password for your password manager vault.",
+    funFact: "Your password manager master password is the most important password you'll ever create. It protects all your other passwords.",
+    explanation: "This needs to be your strongest password AND memorable since you can't store it in a password manager. Long passphrases are ideal.",
+  },
+  {
+    id: 305, scenario: "Create a password for a top-secret project shared with your team.",
+    funFact: "In 2023, 49% of data breaches involved stolen credentials. Shared passwords should be distributed via a secure channel, never email.",
+    explanation: "Shared passwords must be strong AND easy to communicate. Avoid ambiguous characters (0/O, l/1) and use a memorable passphrase.",
+  },
+  {
+    id: 306, scenario: "Create a password for the server room physical access keypad.",
+    funFact: "Physical access codes should be changed every 90 days. Worn keypad buttons can reveal frequently used digits to attackers.",
+    explanation: "Keypad passwords need to be numeric but unpredictable. Avoid patterns, birthdates, or sequential numbers.",
+  },
+];
 
 // ─── Phish or Legit Question Bank ────────────────────────────────────────────
 
@@ -260,17 +386,37 @@ const URL_BANK: SpotURLRound[] = [
 
 // ─── Build randomized question set ──────────────────────────────────────────
 
-function buildQuestionSet(): GameRound[] {
+function buildQuestionSet(playerIds: string[] = []): GameRound[] {
   const shuffledPhish = [...PHISH_BANK].sort(() => Math.random() - 0.5);
   const shuffledPass = [...PASSWORD_BANK].sort(() => Math.random() - 0.5);
   const shuffledUrl = [...URL_BANK].sort(() => Math.random() - 0.5);
+  const shuffledBattle = [...BATTLE_SCENARIOS].sort(() => Math.random() - 0.5);
 
-  // Pick 5 phish, 3 password, 2 URL = 10 rounds, randomized order
+  // Pick 4 phish, 2 password, 2 URL, 2 battle = 10 rounds
   const picks: GameRound[] = [
-    ...shuffledPhish.slice(0, 5),
-    ...shuffledPass.slice(0, 3),
+    ...shuffledPhish.slice(0, 4),
+    ...shuffledPass.slice(0, 2),
     ...shuffledUrl.slice(0, 2),
   ];
+
+  // Add password battle rounds (need at least 2 players)
+  if (playerIds.length >= 2) {
+    const battleCount = Math.min(2, shuffledBattle.length);
+    for (let i = 0; i < battleCount; i++) {
+      const scenario = shuffledBattle[i];
+      // Pick two random challengers for each battle (different pairs if possible)
+      const shuffledPlayers = [...playerIds].sort(() => Math.random() - 0.5);
+      const pair: [string, string] = [shuffledPlayers[0], shuffledPlayers[1 % shuffledPlayers.length]];
+      picks.push({
+        ...scenario,
+        type: "password_battle",
+        difficulty: "medium" as const,
+        category: "Password Battle",
+        challengerIds: pair,
+        submissions: {},
+      });
+    }
+  }
 
   return picks.sort(() => Math.random() - 0.5);
 }
@@ -298,6 +444,9 @@ function checkAnswer(round: GameRound, answer: number): boolean {
       const correct = a === correctIdx;
       return correct;
     }
+    case "password_battle":
+      // Battle rounds are scored differently -- not via checkAnswer
+      return false;
     default:
       return false;
   }
@@ -406,6 +555,10 @@ export async function startCountdown(roomId: string, playerId: string): Promise<
 export async function startGame(roomId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room) return null;
+  // Rebuild question set with player IDs (for battle round challengers)
+  const playerIds = room.players.map((p) => p.id);
+  room.questionSet = buildQuestionSet(playerIds);
+  room.totalQuestions = room.questionSet.length;
   room.status = "playing";
   room.currentQuestion = 0;
   room.questionStartedAt = Date.now();
@@ -422,9 +575,13 @@ export async function submitAnswer(
   if (!room || room.status !== "playing" || room.currentQuestion !== questionIndex) return null;
 
   const player = room.players.find((p) => p.id === playerId);
-  if (!player || player.answers.length > questionIndex) return room;
+  if (!player) return room;
+  // Already answered this question
+  if (player.answers.length > questionIndex) return room;
 
   const round = room.questionSet[questionIndex];
+  // Battle rounds use submitBattlePassword instead
+  if (round.type === "password_battle") return room;
   const correct = checkAnswer(round, answer);
 
   const elapsed = room.questionStartedAt ? (Date.now() - room.questionStartedAt) / 1000 : room.questionTimeLimit;
@@ -451,10 +608,86 @@ export async function submitAnswer(
   return room;
 }
 
+export async function submitBattlePassword(
+  roomId: string, playerId: string, questionIndex: number, password: string
+): Promise<GameRoom | null> {
+  const room = await getRoom(roomId);
+  if (!room || room.status !== "playing" || room.currentQuestion !== questionIndex) return null;
+
+  const round = room.questionSet[questionIndex];
+  if (round.type !== "password_battle") return null;
+
+  // Guard against missing data from Redis deserialization
+  if (!round.submissions) round.submissions = {};
+  if (!round.challengerIds) return null;
+
+  // Only challengers can submit
+  if (!round.challengerIds.includes(playerId)) return null;
+
+  // Already submitted
+  if (round.submissions[playerId]) return room;
+
+  // Score the password
+  const breakdown = scorePassword(password);
+  round.submissions[playerId] = { password, score: breakdown.total, breakdown };
+
+  // Mark that this player has "answered" this round
+  const player = room.players.find((p) => p.id === playerId);
+  if (player && player.answers.length <= questionIndex) {
+    // Mark as true (answered) for now -- scoring happens at results
+    player.answers.push(true);
+    player.lastAnswerTime = Date.now();
+  }
+
+  // Non-challengers also need to be marked as answered (they are spectators)
+  for (const p of room.players) {
+    if (!round.challengerIds.includes(p.id) && p.answers.length <= questionIndex) {
+      p.answers.push(null); // spectators get null (not scored)
+    }
+  }
+
+  // If both challengers submitted, auto-show results
+  const bothSubmitted = round.challengerIds.every((id) => round.submissions[id]);
+  if (bothSubmitted) {
+    // Award points: winner gets 200, loser gets 50, tie = 125 each
+    const [id1, id2] = round.challengerIds;
+    const score1 = round.submissions[id1]?.score ?? 0;
+    const score2 = round.submissions[id2]?.score ?? 0;
+    const p1 = room.players.find((p) => p.id === id1);
+    const p2 = room.players.find((p) => p.id === id2);
+
+    if (score1 > score2) {
+      if (p1) { p1.score += 200; p1.streak += 1; }
+      if (p2) { p2.score += 50; p2.streak = 0; }
+    } else if (score2 > score1) {
+      if (p2) { p2.score += 200; p2.streak += 1; }
+      if (p1) { p1.score += 50; p1.streak = 0; }
+    } else {
+      if (p1) { p1.score += 125; p1.streak += 1; }
+      if (p2) { p2.score += 125; p2.streak += 1; }
+    }
+
+    room.status = "showing_results";
+  }
+
+  await saveRoom(room);
+  return room;
+}
+
 export async function nextQuestion(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room || room.hostId !== playerId) return null;
-  const nextIdx = room.currentQuestion + 1;
+
+  // Pad missing answers for the current question before moving on
+  const qi = room.currentQuestion;
+  for (const p of room.players) {
+    if (p.answers.length <= qi) {
+      p.answers.push(null);
+      p.streak = 0;
+    }
+  }
+
+  const nextIdx = qi + 1;
   if (nextIdx >= room.totalQuestions) {
     room.status = "game_over";
     room.questionStartedAt = null;
@@ -471,6 +704,16 @@ export async function nextQuestion(roomId: string, playerId: string): Promise<Ga
 export async function showResults(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room || room.hostId !== playerId) return null;
+  // Only transition if currently playing (prevent double-transitions)
+  if (room.status !== "playing") return room;
+  // Pad missing answers for any player who didn't answer (timed out)
+  const qi = room.currentQuestion;
+  for (const p of room.players) {
+    if (p.answers.length <= qi) {
+      p.answers.push(null);
+      p.streak = 0;
+    }
+  }
   room.status = "showing_results";
   await saveRoom(room);
   return room;
@@ -483,7 +726,8 @@ export async function resetRoom(roomId: string, playerId: string): Promise<GameR
   room.currentQuestion = 0;
   room.questionStartedAt = null;
   room.countdownEndsAt = null;
-  room.questionSet = buildQuestionSet();
+  const playerIds = room.players.map((p) => p.id);
+  room.questionSet = buildQuestionSet(playerIds);
   room.totalQuestions = room.questionSet.length;
   for (const p of room.players) { p.answers = []; p.score = 0; p.streak = 0; p.lastAnswerTime = null; }
   await saveRoom(room);
@@ -493,17 +737,29 @@ export async function resetRoom(roomId: string, playerId: string): Promise<GameR
 export async function leaveRoom(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room) return null;
+
   room.players = room.players.filter((p) => p.id !== playerId);
   if (room.players.length === 0) { await redis.del(roomKey(roomId)); return null; }
+
+  // Transfer host if needed
   if (room.hostId === playerId) room.hostId = room.players[0].id;
-  if (room.status === "playing") {
-    const qi = room.currentQuestion;
-    if (room.players.every((p) => p.answers.length > qi)) room.status = "showing_results";
-  }
-  if (room.status === "countdown" && room.players.length < 1) {
+
+  // If in countdown but not enough players, go back to waiting
+  if (room.status === "countdown" && room.players.length < 2) {
     room.status = "waiting";
     room.countdownEndsAt = null;
   }
+
+  // If playing: check if all REMAINING players have already answered
+  if (room.status === "playing") {
+    const qi = room.currentQuestion;
+    // Pad any missing answers for remaining players who timed out
+    const allAnswered = room.players.every((p) => p.answers.length > qi);
+    if (allAnswered) {
+      room.status = "showing_results";
+    }
+  }
+
   await saveRoom(room);
   return room;
 }
@@ -517,4 +773,4 @@ export async function heartbeat(roomId: string, playerId: string): Promise<GameR
   return room;
 }
 
-export { pickColor };
+export { pickColor, scorePassword };
