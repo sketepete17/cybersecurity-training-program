@@ -495,15 +495,28 @@ export async function leaveRoom(roomId: string, playerId: string): Promise<GameR
   if (!room) return null;
   room.players = room.players.filter((p) => p.id !== playerId);
   if (room.players.length === 0) { await redis.del(roomKey(roomId)); return null; }
+
+  // Transfer host if needed
   if (room.hostId === playerId) room.hostId = room.players[0].id;
-  if (room.status === "playing") {
-    const qi = room.currentQuestion;
-    if (room.players.every((p) => p.answers.length > qi)) room.status = "showing_results";
-  }
-  if (room.status === "countdown" && room.players.length < 1) {
+
+  // If in countdown but not enough players, go back to waiting
+  if (room.status === "countdown" && room.players.length < 2) {
     room.status = "waiting";
     room.countdownEndsAt = null;
   }
+
+  // If playing: pad the leaving player's missing answers so it doesn't block progress,
+  // then check if all remaining players have answered the current question
+  if (room.status === "playing") {
+    const qi = room.currentQuestion;
+    if (room.players.every((p) => p.answers.length > qi)) {
+      room.status = "showing_results";
+    }
+  }
+
+  // If showing_results but only 1 player left (or 0), don't get stuck
+  // The game will continue on the host's auto-next timer
+
   await saveRoom(room);
   return room;
 }

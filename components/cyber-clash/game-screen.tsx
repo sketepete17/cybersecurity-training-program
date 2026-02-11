@@ -75,6 +75,8 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
       const elapsed = (Date.now() - room.questionStartedAt!) / 1000;
       const remaining = Math.max(0, room.questionTimeLimit - elapsed);
       setTimeLeft(remaining);
+      // When time runs out and we're host, trigger results.
+      // timerExpiredRef prevents repeated calls even if isHost changes mid-tick.
       if (remaining <= 0 && isHost && !timerExpiredRef.current) {
         timerExpiredRef.current = true;
         onShowResults();
@@ -85,12 +87,24 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
     return () => clearInterval(interval);
   }, [room.status, room.questionStartedAt, room.questionTimeLimit, isHost, onShowResults]);
 
+  // If we become host mid-round (previous host left) and timer already expired, fire show_results
   useEffect(() => {
-    if (showingResults && isHost) {
-      if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current);
-      autoNextTimerRef.current = setTimeout(() => onNextQuestion(), 8000);
-      return () => { if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current); };
+    if (isHost && room.status === "playing" && room.questionStartedAt) {
+      const elapsed = (Date.now() - room.questionStartedAt) / 1000;
+      if (elapsed >= room.questionTimeLimit && !timerExpiredRef.current) {
+        timerExpiredRef.current = true;
+        onShowResults();
+      }
     }
+  }, [isHost, room.status, room.questionStartedAt, room.questionTimeLimit, onShowResults]);
+
+  // Auto-advance to next question after results are shown (host only).
+  // Uses room.currentQuestion + isHost as deps so it re-fires if host changes mid-game.
+  useEffect(() => {
+    if (!showingResults || !isHost) return;
+    if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current);
+    autoNextTimerRef.current = setTimeout(() => onNextQuestion(), 8000);
+    return () => { if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current); };
   }, [showingResults, isHost, onNextQuestion, room.currentQuestion]);
 
   const submittingRef = useRef(false);
@@ -527,7 +541,7 @@ function TimesUpState() {
   );
 }
 
-/* ────────────────── RESULTS REVEAL ──────────────────── */
+/* ────────────────── RESULTS REVEAL ────────────���─────── */
 
 function ResultsReveal({ round, room, wasCorrect, playerStreak, showScorePopup, showExplanation, highlightClues, showFunFact, isHost, onNextQuestion }: {
   round: GameRound; room: GameRoom; wasCorrect: boolean | null; playerStreak: number; showScorePopup: boolean;
