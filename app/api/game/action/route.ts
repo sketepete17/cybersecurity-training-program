@@ -6,6 +6,7 @@ import {
   nextQuestion,
   showResults,
   resetRoom,
+  leaveRoom,
 } from "@/lib/game-room";
 
 export async function POST(req: Request) {
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
 
       case "reset":
         room = await resetRoom(roomId, playerId);
+        break;
+
+      case "leave":
+        room = await leaveRoom(roomId, playerId);
+        // Room might be null if it was deleted (empty)
+        if (!room) {
+          return NextResponse.json({ room: null, left: true });
+        }
         break;
 
       default:

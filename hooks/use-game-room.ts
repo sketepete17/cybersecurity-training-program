@@ -14,6 +14,12 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const roomIdRef = useRef(roomId);
+  const playerIdRef = useRef(playerId);
+
+  // Keep refs in sync for the beforeunload handler
+  useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
+  useEffect(() => { playerIdRef.current = playerId; }, [playerId]);
 
   const poll = useCallback(async () => {
     if (!roomId || !playerId) return;
@@ -49,6 +55,26 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [enabled, roomId, playerId, poll]);
+
+  // Send leave on tab close / page unload
+  useEffect(() => {
+    if (!enabled || !roomId || !playerId) return;
+
+    const handleUnload = () => {
+      const rid = roomIdRef.current;
+      const pid = playerIdRef.current;
+      if (!rid || !pid) return;
+
+      // Use sendBeacon for reliable delivery during page close
+      const payload = JSON.stringify({ action: "leave", roomId: rid, playerId: pid });
+      navigator.sendBeacon("/api/game/action", payload);
+    };
+
+    window.addEventListener("beforeunload", handleUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [enabled, roomId, playerId]);
 
   const sendAction = useCallback(
     async (action: string, extra?: Record<string, unknown>) => {

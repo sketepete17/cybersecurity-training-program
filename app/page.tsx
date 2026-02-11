@@ -38,11 +38,11 @@ export default function CyberShieldPage() {
   }, [sendAction]);
 
   const handleAnswer = useCallback(
-    (isPhishing: boolean) => {
+    (answer: number) => {
       if (!room) return;
       sendAction("submit_answer", {
         questionIndex: room.currentQuestion,
-        answer: isPhishing,
+        answer,
       });
     },
     [sendAction, room]
@@ -58,6 +58,12 @@ export default function CyberShieldPage() {
 
   const handlePlayAgain = useCallback(() => {
     sendAction("reset");
+  }, [sendAction]);
+
+  const handleLeave = useCallback(async () => {
+    await sendAction("leave");
+    setRoomId(null);
+    setPlayerId(null);
   }, [sendAction]);
 
   // No room yet -- show join screen
@@ -101,6 +107,7 @@ export default function CyberShieldPage() {
           myPlayerId={playerId}
           isHost={isHost}
           onPlayAgain={handlePlayAgain}
+          onLeave={handleLeave}
         />
       )}
     </main>
