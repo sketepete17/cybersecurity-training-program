@@ -18,7 +18,7 @@ interface LobbyScreenProps {
 export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartGame }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false);
   const [countdownDisplay, setCountdownDisplay] = useState<number | null>(null);
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR] = useState(true);
 
   // Build the join URL with room code
   const joinUrl = typeof window !== "undefined"
