@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRoom, heartbeat } from "@/lib/game-room";
+import { heartbeat } from "@/lib/game-room";
 
 export async function POST(req: Request) {
   try {
@@ -16,11 +16,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
-    // Strip question answers for non-results states so players can't cheat
+    // Strip question answers during active play so players can't cheat
+    // But allow full data during "showing_results" and "game_over"
     const safeRoom = { ...room };
     if (room.status === "playing") {
       safeRoom.questionSet = room.questionSet.map((q, i) => {
-        if (i === room.currentQuestion) {
+        // Only strip the current and future questions
+        if (i >= room.currentQuestion) {
           return { ...q, isPhishing: undefined as unknown as boolean, explanation: "", clues: [] };
         }
         return q;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Wifi, Users, Zap, ArrowLeft } from "lucide-react";
+import { Shield, Wifi, Users, Zap, ArrowLeft, Fish, ShieldCheck, Mail, Lock, Sparkles, AlertTriangle } from "lucide-react";
 
 interface JoinScreenProps {
   onCreated: (roomId: string, playerId: string) => void;
@@ -70,31 +70,43 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4" style={{ background: "var(--cc-dark)" }}>
-      {/* Background ambient */}
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4" style={{ background: "var(--cc-dark)" }}>
+      {/* Animated background elements */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        {/* Grid */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: "linear-gradient(rgba(0,229,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.5) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
         }} />
+        {/* Floating icons */}
+        <Fish className="absolute left-[8%] top-[15%] h-10 w-10 animate-float opacity-[0.06]" style={{ color: "#FF2D78", animationDelay: "0s" }} />
+        <ShieldCheck className="absolute right-[12%] top-[20%] h-8 w-8 animate-float opacity-[0.06]" style={{ color: "#39FF14", animationDelay: "1.5s" }} />
+        <Mail className="absolute left-[20%] bottom-[25%] h-8 w-8 animate-float opacity-[0.06]" style={{ color: "#00E5FF", animationDelay: "0.8s" }} />
+        <Lock className="absolute right-[18%] bottom-[15%] h-9 w-9 animate-float opacity-[0.06]" style={{ color: "#FFB800", animationDelay: "2.2s" }} />
+        <AlertTriangle className="absolute left-[40%] top-[8%] h-7 w-7 animate-float opacity-[0.05]" style={{ color: "#A855F7", animationDelay: "1s" }} />
+        <Shield className="absolute right-[35%] bottom-[8%] h-8 w-8 animate-float opacity-[0.05]" style={{ color: "#00E5FF", animationDelay: "0.4s" }} />
+        {/* Glows */}
         <div className="absolute left-[10%] top-[20%] h-72 w-72 animate-float rounded-full opacity-[0.04]" style={{ background: "radial-gradient(circle, #00E5FF, transparent 70%)" }} />
         <div className="absolute right-[10%] bottom-[25%] h-56 w-56 animate-float-delayed rounded-full opacity-[0.04]" style={{ background: "radial-gradient(circle, #FF2D78, transparent 70%)" }} />
+        <div className="absolute left-[50%] top-[60%] h-48 w-48 animate-float rounded-full opacity-[0.03]" style={{ background: "radial-gradient(circle, #FFB800, transparent 70%)", animationDelay: "1.5s" }} />
       </div>
 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-10">
         {/* Logo */}
         <div className="flex flex-col items-center gap-5">
           <div className="relative">
-            <div className="absolute inset-[-8px] animate-glow-pulse rounded-3xl blur-xl" style={{ background: "#00E5FF", opacity: 0.15 }} />
+            <div className="absolute inset-[-10px] animate-glow-pulse rounded-3xl blur-xl" style={{ background: "#00E5FF", opacity: 0.15 }} />
             <div
-              className="relative flex h-24 w-24 items-center justify-center rounded-3xl border-[3px]"
+              className="relative flex h-28 w-28 items-center justify-center rounded-3xl border-[3px]"
               style={{ borderColor: "#00E5FF", background: "rgba(0,229,255,0.08)" }}
             >
-              <Shield className="h-12 w-12" style={{ color: "#00E5FF" }} strokeWidth={2.5} />
+              <Shield className="h-14 w-14" style={{ color: "#00E5FF" }} strokeWidth={2.5} />
+              <Sparkles className="absolute -top-3 -right-3 h-6 w-6 animate-float" style={{ color: "#FFB800" }} />
+              <Zap className="absolute -bottom-2 -left-2 h-5 w-5 animate-float-delayed" style={{ color: "#39FF14" }} />
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
-            <h1 className="text-center text-5xl font-black tracking-tight md:text-6xl" style={{ color: "#fff" }}>
+            <h1 className="text-balance text-center text-5xl font-black tracking-tight md:text-6xl" style={{ color: "#fff" }}>
               {"CYBER"}<span style={{ color: "#00E5FF" }}>{"SHIELD"}</span>
             </h1>
             <p className="text-base font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -157,7 +169,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
                 color: "#FFB800",
               }}
             >
-              <Users className="h-6 w-6" />
+              <Users className="h-6 w-6 transition-transform group-hover:scale-110" />
               Join a Game
             </button>
 
