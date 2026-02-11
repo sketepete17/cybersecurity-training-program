@@ -144,18 +144,6 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onBattleSubmit, o
 
   if (!round) return null;
 
-  if (roundType === "password_battle") {
-    const br = round as PasswordBattleRound;
-    console.log("[v0] Password Battle round:", {
-      type: br.type,
-      scenario: br.scenario,
-      challengerIds: br.challengerIds,
-      submissions: br.submissions,
-      hasChallengerIds: Array.isArray(br.challengerIds),
-      hasSubmissions: typeof br.submissions === "object",
-    });
-  }
-
   return (
     <div className="flex min-h-screen flex-col lg:flex-row" style={{ background: "var(--cc-dark)" }}>
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
@@ -777,7 +765,7 @@ function PasswordBattleContent({
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-black sm:h-14 sm:w-14"
               style={{ background: "rgba(0,229,255,0.15)", color: "#00E5FF", border: "2px solid rgba(0,229,255,0.3)" }}>
-              {challenger1?.name.charAt(0).toUpperCase() ?? "?"}
+              {challenger1?.name?.charAt(0)?.toUpperCase() ?? "?"}
             </div>
             <span className="max-w-[64px] truncate text-[10px] font-bold sm:text-xs" style={{ color: "#00E5FF" }}>{challenger1?.name ?? "???"}</span>
           </div>
@@ -788,7 +776,7 @@ function PasswordBattleContent({
           <div className="flex flex-col items-center gap-1.5">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-black sm:h-14 sm:w-14"
               style={{ background: "rgba(255,184,0,0.15)", color: "#FFB800", border: "2px solid rgba(255,184,0,0.3)" }}>
-              {challenger2?.name.charAt(0).toUpperCase() ?? "?"}
+              {challenger2?.name?.charAt(0)?.toUpperCase() ?? "?"}
             </div>
             <span className="max-w-[64px] truncate text-[10px] font-bold sm:text-xs" style={{ color: "#FFB800" }}>{challenger2?.name ?? "???"}</span>
           </div>
@@ -945,7 +933,7 @@ function BattleResultsReveal({
               <div className="flex items-center justify-between gap-2 px-4 py-3" style={{ borderBottom: "3px solid rgba(255,255,255,0.06)", background: `${color}05` }}>
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black" style={{ background: `${color}15`, color }}>
-                    {pl?.name.charAt(0).toUpperCase() ?? "?"}
+                    {pl?.name?.charAt(0)?.toUpperCase() ?? "?"}
                   </div>
                   <span className="text-sm font-black" style={{ color }}>{pl?.name ?? "???"}</span>
                 </div>
