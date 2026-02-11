@@ -29,9 +29,13 @@ export async function POST(req: Request) {
         room = await startGame(roomId);
         break;
 
-      case "submit_answer":
-        room = await submitAnswer(roomId, playerId, body.questionIndex, body.answer);
+      case "submit_answer": {
+        const answerNum = Number(body.answer);
+        const qIdx = Number(body.questionIndex);
+        console.log("[v0] action submit_answer:", { questionIndex: qIdx, answer: answerNum, rawAnswer: body.answer, rawType: typeof body.answer });
+        room = await submitAnswer(roomId, playerId, qIdx, answerNum);
         break;
+      }
 
       case "show_results":
         room = await showResults(roomId, playerId);

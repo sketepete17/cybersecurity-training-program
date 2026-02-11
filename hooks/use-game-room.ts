@@ -65,9 +65,10 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
       const pid = playerIdRef.current;
       if (!rid || !pid) return;
 
-      // Use sendBeacon for reliable delivery during page close
+      // Use sendBeacon with Blob for reliable delivery with correct content type
       const payload = JSON.stringify({ action: "leave", roomId: rid, playerId: pid });
-      navigator.sendBeacon("/api/game/action", payload);
+      const blob = new Blob([payload], { type: "application/json" });
+      navigator.sendBeacon("/api/game/action", blob);
     };
 
     window.addEventListener("beforeunload", handleUnload);

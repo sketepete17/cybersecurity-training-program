@@ -139,8 +139,9 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
             <div>
               <div className="flex items-center gap-2">
                 <p className="text-xl font-black" style={{ color: "#fff" }}>
-                  {room.currentQuestion + 1}
-                  <span style={{ color: "rgba(255,255,255,0.25)" }}> / {room.totalQuestions}</span>
+                  {'Round '}
+                  <span style={{ color: roundColor }}>{room.currentQuestion + 1}</span>
+                  <span style={{ color: "rgba(255,255,255,0.2)" }}>{' of '}{room.totalQuestions}</span>
                 </p>
                 {round.difficulty && (
                   <span className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
@@ -151,6 +152,7 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
               </div>
               <p className="text-[10px] font-bold tracking-wider uppercase" style={{ color: roundColor }}>
                 {ROUND_TYPE_LABELS[roundType]}
+                {round.category && <span style={{ color: "rgba(255,255,255,0.2)" }}>{' \u2022 '}{round.category}</span>}
               </p>
             </div>
           </div>
@@ -230,7 +232,9 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
           <div className="mb-3 flex items-center justify-center gap-2">
             <Search className="h-4 w-4 animate-float" style={{ color: roundColor, animationDuration: "2s" }} />
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: `${roundColor}80` }}>
-              {roundType === "phish" ? "Investigate the email carefully..." : roundType === "password" ? "How strong is this password?" : "Which URL is the real one?"}
+              {roundType === "phish" ? "Read the email carefully. Look at the sender, links, and tone..." 
+                : roundType === "password" ? "Analyze the password. Consider length, patterns, and character variety..." 
+                : "Examine each URL closely. Check the root domain..."}
             </span>
           </div>
         )}
@@ -635,13 +639,13 @@ function ResultsReveal({ round, room, wasCorrect, playerStreak, showScorePopup, 
         <button onClick={onNextQuestion}
           className="jackbox-btn flex items-center justify-center gap-3 rounded-2xl px-6 py-5 text-lg"
           style={{ background: "#00E5FF", color: "var(--cc-dark)", boxShadow: "0 4px 30px rgba(0,229,255,0.3)" }}>
-          {room.currentQuestion < room.totalQuestions - 1 ? "Next Question" : "See Final Results"}
+          {room.currentQuestion < room.totalQuestions - 1 ? "Next Round" : "See Final Results"}
           <ChevronRight className="h-5 w-5" />
         </button>
       ) : (
         <div className="flex items-center justify-center gap-2 py-3">
           <div className="h-1.5 w-1.5 animate-pulse rounded-full" style={{ background: "#00E5FF" }} />
-          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>Next question loading...</span>
+          <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>Next round loading...</span>
         </div>
       )}
     </div>

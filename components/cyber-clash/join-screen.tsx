@@ -110,7 +110,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
               {"CYBER"}<span style={{ color: "#00E5FF" }}>{"SHIELD"}</span>
             </h1>
             <p className="text-base font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Phish or Legit?
+              Cyber Security Party Game
             </p>
           </div>
         </div>
@@ -177,7 +177,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
             <div className="mt-2 flex items-center justify-center gap-6 text-sm font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>
               <span className="flex items-center gap-1.5"><Wifi className="h-4 w-4" /> Real-time</span>
               <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Multiplayer</span>
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> 10 Rounds</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> 3 Game Types</span>
             </div>
           </div>
         )}

@@ -9,9 +9,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CyberShield - Phish or Legit?",
+  title: "CyberShield - Cyber Security Party Game",
   description:
-    "A real-time multiplayer party game for cybersecurity awareness. Read suspicious emails, spot phishing attacks, and outscore your opponents.",
+    "A real-time multiplayer party game for cybersecurity awareness. Spot phishing emails, rate password strength, identify fake URLs, and outscore your opponents.",
   keywords: [
     "cybersecurity",
     "phishing",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "CyberShield",
-    title: "CyberShield - Phish or Legit?",
+    title: "CyberShield - Cyber Security Party Game",
     description:
       "A real-time multiplayer party game for cybersecurity awareness training",
   },

@@ -278,14 +278,29 @@ function buildQuestionSet(): GameRound[] {
 // ─── Check answer correctness ────────────────────────────────────────────────
 
 function checkAnswer(round: GameRound, answer: number): boolean {
+  const a = Number(answer);
   switch (round.type) {
-    case "phish":
+    case "phish": {
       // answer: 1 = phishing, 0 = legit
-      return (answer === 1) === round.isPhishing;
-    case "password":
-      return answer === round.correctAnswer;
-    case "spot_url":
-      return answer === round.correctIndex;
+      // Safely coerce isPhishing to boolean (Redis may store as string)
+      const isPhish = round.isPhishing === true || round.isPhishing === ("true" as unknown);
+      const playerSaidPhish = a === 1;
+      const correct = playerSaidPhish === isPhish;
+      console.log("[v0] phish check:", { a, isPhishing: round.isPhishing, isPhishType: typeof round.isPhishing, isPhish, playerSaidPhish, correct });
+      return correct;
+    }
+    case "password": {
+      const correctIdx = Number(round.correctAnswer);
+      const correct = a === correctIdx;
+      console.log("[v0] password check:", { a, correctAnswer: round.correctAnswer, correctIdx, correct });
+      return correct;
+    }
+    case "spot_url": {
+      const correctIdx = Number(round.correctIndex);
+      const correct = a === correctIdx;
+      console.log("[v0] url check:", { a, correctIndex: round.correctIndex, correctIdx, correct });
+      return correct;
+    }
     default:
       return false;
   }
@@ -414,6 +429,7 @@ export async function submitAnswer(
 
   const round = room.questionSet[questionIndex];
   const correct = checkAnswer(round, answer);
+  console.log("[v0] submitAnswer debug:", { roundType: round.type, answer, correct });
   const elapsed = room.questionStartedAt ? (Date.now() - room.questionStartedAt) / 1000 : room.questionTimeLimit;
   const timeRemaining = Math.max(0, room.questionTimeLimit - elapsed);
 
