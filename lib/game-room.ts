@@ -422,7 +422,9 @@ export async function submitAnswer(
   if (!room || room.status !== "playing" || room.currentQuestion !== questionIndex) return null;
 
   const player = room.players.find((p) => p.id === playerId);
-  if (!player || player.answers.length > questionIndex) return room;
+  if (!player) return room;
+  // Already answered this question
+  if (player.answers.length > questionIndex) return room;
 
   const round = room.questionSet[questionIndex];
   const correct = checkAnswer(round, answer);
@@ -454,7 +456,17 @@ export async function submitAnswer(
 export async function nextQuestion(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room || room.hostId !== playerId) return null;
-  const nextIdx = room.currentQuestion + 1;
+
+  // Pad missing answers for the current question before moving on
+  const qi = room.currentQuestion;
+  for (const p of room.players) {
+    if (p.answers.length <= qi) {
+      p.answers.push(null);
+      p.streak = 0;
+    }
+  }
+
+  const nextIdx = qi + 1;
   if (nextIdx >= room.totalQuestions) {
     room.status = "game_over";
     room.questionStartedAt = null;
@@ -471,6 +483,16 @@ export async function nextQuestion(roomId: string, playerId: string): Promise<Ga
 export async function showResults(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room || room.hostId !== playerId) return null;
+  // Only transition if currently playing (prevent double-transitions)
+  if (room.status !== "playing") return room;
+  // Pad missing answers for any player who didn't answer (timed out)
+  const qi = room.currentQuestion;
+  for (const p of room.players) {
+    if (p.answers.length <= qi) {
+      p.answers.push(null);
+      p.streak = 0;
+    }
+  }
   room.status = "showing_results";
   await saveRoom(room);
   return room;
@@ -493,6 +515,7 @@ export async function resetRoom(roomId: string, playerId: string): Promise<GameR
 export async function leaveRoom(roomId: string, playerId: string): Promise<GameRoom | null> {
   const room = await getRoom(roomId);
   if (!room) return null;
+
   room.players = room.players.filter((p) => p.id !== playerId);
   if (room.players.length === 0) { await redis.del(roomKey(roomId)); return null; }
 
@@ -505,17 +528,15 @@ export async function leaveRoom(roomId: string, playerId: string): Promise<GameR
     room.countdownEndsAt = null;
   }
 
-  // If playing: pad the leaving player's missing answers so it doesn't block progress,
-  // then check if all remaining players have answered the current question
+  // If playing: check if all REMAINING players have already answered
   if (room.status === "playing") {
     const qi = room.currentQuestion;
-    if (room.players.every((p) => p.answers.length > qi)) {
+    // Pad any missing answers for remaining players who timed out
+    const allAnswered = room.players.every((p) => p.answers.length > qi);
+    if (allAnswered) {
       room.status = "showing_results";
     }
   }
-
-  // If showing_results but only 1 player left (or 0), don't get stuck
-  // The game will continue on the host's auto-next timer
 
   await saveRoom(room);
   return room;

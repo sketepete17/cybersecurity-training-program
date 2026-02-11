@@ -69,15 +69,18 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [showingResults, room.currentQuestion]);
 
+  // Track isHost in a ref so the interval callback always has the latest value
+  const isHostRef = useRef(isHost);
+  useEffect(() => { isHostRef.current = isHost; }, [isHost]);
+
+  // Countdown timer -- updates timeLeft and triggers show_results when time expires
   useEffect(() => {
     if (room.status !== "playing" || !room.questionStartedAt) return;
     const tick = () => {
       const elapsed = (Date.now() - room.questionStartedAt!) / 1000;
       const remaining = Math.max(0, room.questionTimeLimit - elapsed);
       setTimeLeft(remaining);
-      // When time runs out and we're host, trigger results.
-      // timerExpiredRef prevents repeated calls even if isHost changes mid-tick.
-      if (remaining <= 0 && isHost && !timerExpiredRef.current) {
+      if (remaining <= 0 && isHostRef.current && !timerExpiredRef.current) {
         timerExpiredRef.current = true;
         onShowResults();
       }
@@ -85,21 +88,20 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
     tick();
     const interval = setInterval(tick, 200);
     return () => clearInterval(interval);
-  }, [room.status, room.questionStartedAt, room.questionTimeLimit, isHost, onShowResults]);
+  }, [room.status, room.questionStartedAt, room.questionTimeLimit, onShowResults]);
 
   // If we become host mid-round (previous host left) and timer already expired, fire show_results
   useEffect(() => {
-    if (isHost && room.status === "playing" && room.questionStartedAt) {
-      const elapsed = (Date.now() - room.questionStartedAt) / 1000;
-      if (elapsed >= room.questionTimeLimit && !timerExpiredRef.current) {
-        timerExpiredRef.current = true;
-        onShowResults();
-      }
+    if (!isHost || room.status !== "playing" || !room.questionStartedAt) return;
+    const elapsed = (Date.now() - room.questionStartedAt) / 1000;
+    if (elapsed >= room.questionTimeLimit && !timerExpiredRef.current) {
+      timerExpiredRef.current = true;
+      onShowResults();
     }
   }, [isHost, room.status, room.questionStartedAt, room.questionTimeLimit, onShowResults]);
 
   // Auto-advance to next question after results are shown (host only).
-  // Uses room.currentQuestion + isHost as deps so it re-fires if host changes mid-game.
+  // Fires whenever showingResults or isHost changes, so new hosts pick up the baton.
   useEffect(() => {
     if (!showingResults || !isHost) return;
     if (autoNextTimerRef.current) clearTimeout(autoNextTimerRef.current);

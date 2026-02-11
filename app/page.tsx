@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useGameRoom } from "@/hooks/use-game-room";
 import { JoinScreen } from "@/components/cyber-clash/join-screen";
 import { LobbyScreen } from "@/components/cyber-clash/lobby-screen";
@@ -102,6 +102,18 @@ export default function CyberShieldPage() {
   const handleNextQuestion = useCallback(() => {
     sendAction("next_question");
   }, [sendAction]);
+
+  // Safety net: if stuck on showing_results for too long and we're host, auto-advance
+  const staleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (staleTimerRef.current) { clearTimeout(staleTimerRef.current); staleTimerRef.current = null; }
+    if (room?.status === "showing_results" && isHost) {
+      staleTimerRef.current = setTimeout(() => {
+        sendAction("next_question");
+      }, 12000);
+    }
+    return () => { if (staleTimerRef.current) clearTimeout(staleTimerRef.current); };
+  }, [room?.status, room?.currentQuestion, isHost, sendAction]);
 
   const handlePlayAgain = useCallback(() => {
     sendAction("reset");
