@@ -93,8 +93,16 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
     }
   }, [showingResults, isHost, onNextQuestion, room.currentQuestion]);
 
+  const submittingRef = useRef(false);
+
+  // Reset submitting flag when question changes
+  useEffect(() => {
+    submittingRef.current = false;
+  }, [room.currentQuestion]);
+
   const handleAnswer = useCallback((answer: number) => {
-    if (hasAnswered || timeLeft <= 0) return;
+    if (hasAnswered || timeLeft <= 0 || submittingRef.current) return;
+    submittingRef.current = true;
     onAnswer(answer);
   }, [hasAnswered, timeLeft, onAnswer]);
 
@@ -252,11 +260,11 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onShowResults, on
             ) : timeLeft <= 0 ? (
               <TimesUpState />
             ) : roundType === "phish" ? (
-              <PhishButtons onAnswer={handleAnswer} />
+              <PhishButtons onAnswer={handleAnswer} disabled={submittingRef.current} />
             ) : roundType === "password" ? (
-              <PasswordButtons round={round as PasswordRound} onAnswer={handleAnswer} />
+              <PasswordButtons round={round as PasswordRound} onAnswer={handleAnswer} disabled={submittingRef.current} />
             ) : (
-              <URLButtons round={round as SpotURLRound} onAnswer={handleAnswer} />
+              <URLButtons round={round as SpotURLRound} onAnswer={handleAnswer} disabled={submittingRef.current} />
             )}
           </div>
         ) : (
@@ -413,11 +421,11 @@ function URLContent({ round, showingResults, highlightClues }: { round: SpotURLR
 
 /* ────────────────── ANSWER BUTTONS ──────────────────── */
 
-function PhishButtons({ onAnswer }: { onAnswer: (a: number) => void }) {
+function PhishButtons({ onAnswer, disabled }: { onAnswer: (a: number) => void; disabled: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4">
-      <button onClick={() => onAnswer(1)}
-        className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-4 py-5 sm:gap-4 sm:rounded-3xl sm:px-6 sm:py-8"
+      <button onClick={() => onAnswer(1)} disabled={disabled}
+        className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-4 py-5 disabled:pointer-events-none disabled:opacity-50 sm:gap-4 sm:rounded-3xl sm:px-6 sm:py-8"
         style={{ background: "rgba(255,45,120,0.06)", borderColor: "rgba(255,45,120,0.25)" }}
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#FF2D78"; e.currentTarget.style.background = "rgba(255,45,120,0.12)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(255,45,120,0.15)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,45,120,0.25)"; e.currentTarget.style.background = "rgba(255,45,120,0.06)"; e.currentTarget.style.boxShadow = "none"; }}>
@@ -425,8 +433,8 @@ function PhishButtons({ onAnswer }: { onAnswer: (a: number) => void }) {
         <span className="text-lg font-black uppercase tracking-wide sm:text-2xl" style={{ color: "#FF2D78" }}>Phishing</span>
         <span className="hidden text-[11px] font-bold sm:block" style={{ color: "rgba(255,255,255,0.3)" }}>{"It's a scam!"}</span>
       </button>
-      <button onClick={() => onAnswer(0)}
-        className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-4 py-5 sm:gap-4 sm:rounded-3xl sm:px-6 sm:py-8"
+      <button onClick={() => onAnswer(0)} disabled={disabled}
+        className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-4 py-5 disabled:pointer-events-none disabled:opacity-50 sm:gap-4 sm:rounded-3xl sm:px-6 sm:py-8"
         style={{ background: "rgba(57,255,20,0.04)", borderColor: "rgba(57,255,20,0.25)" }}
         onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#39FF14"; e.currentTarget.style.background = "rgba(57,255,20,0.10)"; e.currentTarget.style.boxShadow = "0 0 30px rgba(57,255,20,0.15)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(57,255,20,0.25)"; e.currentTarget.style.background = "rgba(57,255,20,0.04)"; e.currentTarget.style.boxShadow = "none"; }}>
@@ -438,7 +446,7 @@ function PhishButtons({ onAnswer }: { onAnswer: (a: number) => void }) {
   );
 }
 
-function PasswordButtons({ round, onAnswer }: { round: PasswordRound; onAnswer: (a: number) => void }) {
+function PasswordButtons({ round, onAnswer, disabled }: { round: PasswordRound; onAnswer: (a: number) => void; disabled: boolean }) {
   const colors = ["#39FF14", "#FFB800", "#FF2D78"];
   const icons = [ShieldCheck, AlertTriangle, XCircle];
   return (
@@ -447,8 +455,8 @@ function PasswordButtons({ round, onAnswer }: { round: PasswordRound; onAnswer: 
         const Icon = icons[i];
         const color = colors[i];
         return (
-          <button key={i} onClick={() => onAnswer(i)}
-            className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-2 py-4 sm:gap-3 sm:rounded-3xl sm:px-4 sm:py-6"
+          <button key={i} onClick={() => onAnswer(i)} disabled={disabled}
+            className="jackbox-btn group flex flex-col items-center gap-2 rounded-2xl border-[3px] px-2 py-4 disabled:pointer-events-none disabled:opacity-50 sm:gap-3 sm:rounded-3xl sm:px-4 sm:py-6"
             style={{ background: `${color}08`, borderColor: `${color}25` }}
             onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = `${color}15`; e.currentTarget.style.boxShadow = `0 0 25px ${color}20`; }}
             onMouseLeave={(e) => { e.currentTarget.style.borderColor = `${color}25`; e.currentTarget.style.background = `${color}08`; e.currentTarget.style.boxShadow = "none"; }}>
@@ -461,13 +469,13 @@ function PasswordButtons({ round, onAnswer }: { round: PasswordRound; onAnswer: 
   );
 }
 
-function URLButtons({ round, onAnswer }: { round: SpotURLRound; onAnswer: (a: number) => void }) {
+function URLButtons({ round, onAnswer, disabled }: { round: SpotURLRound; onAnswer: (a: number) => void; disabled: boolean }) {
   const colors = ["#00E5FF", "#FF2D78", "#FFB800"];
   return (
     <div className="flex flex-col gap-2 sm:gap-3">
       {round.urls.map((u, i) => (
-        <button key={i} onClick={() => onAnswer(i)}
-          className="jackbox-btn group flex items-center gap-3 rounded-2xl border-[3px] px-3 py-3 text-left sm:gap-4 sm:px-5 sm:py-5"
+        <button key={i} onClick={() => onAnswer(i)} disabled={disabled}
+          className="jackbox-btn group flex items-center gap-3 rounded-2xl border-[3px] px-3 py-3 text-left disabled:pointer-events-none disabled:opacity-50 sm:gap-4 sm:px-5 sm:py-5"
           style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)" }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors[i % colors.length]; e.currentTarget.style.background = `${colors[i % colors.length]}08`; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}>

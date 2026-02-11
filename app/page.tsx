@@ -23,6 +23,15 @@ function getSessionValue(key: string): string | null {
 export default function CyberShieldPage() {
   const [roomId, setRoomId] = useState<string | null>(() => getSessionValue(SESSION_KEY_ROOM));
   const [playerId, setPlayerId] = useState<string | null>(() => getSessionValue(SESSION_KEY_PLAYER));
+  const [publicUrl, setPublicUrl] = useState<string>("");
+
+  // Fetch the real public URL from the server to avoid internal VM hostnames in QR codes
+  useEffect(() => {
+    fetch("/api/public-url")
+      .then((r) => r.json())
+      .then((d) => { if (d.url) setPublicUrl(d.url); })
+      .catch(() => {});
+  }, []);
 
   // Persist roomId and playerId to sessionStorage
   useEffect(() => {
@@ -137,6 +146,7 @@ export default function CyberShieldPage() {
           room={room}
           playerId={playerId}
           isHost={isHost}
+          publicUrl={publicUrl}
           onStartCountdown={handleStartCountdown}
           onStartGame={handleStartGame}
         />
@@ -167,26 +177,31 @@ export default function CyberShieldPage() {
 
       {/* Player departure toasts */}
       {departedPlayers.length > 0 && (
-        <div className="fixed bottom-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:bottom-6 sm:w-auto sm:max-w-none">
+        <div className="fixed top-4 left-1/2 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-2 sm:top-6">
           {departedPlayers.map((d) => (
             <div
               key={d.id}
-              className="flex items-center gap-2 rounded-xl border-[3px] px-3 py-2 shadow-2xl sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-3"
+              className="animate-pop-in flex items-center gap-3 rounded-2xl border-[3px] px-4 py-3 shadow-2xl sm:px-5 sm:py-4"
               style={{
-                background: "rgba(11,15,26,0.95)",
-                borderColor: "rgba(255,45,120,0.3)",
-                backdropFilter: "blur(12px)",
-                animation: "slide-up 0.4s cubic-bezier(0.16,1,0.3,1), fade-out 0.5s ease 3.5s forwards",
+                background: "rgba(11,15,26,0.97)",
+                borderColor: "rgba(255,45,120,0.4)",
+                backdropFilter: "blur(16px)",
+                boxShadow: "0 0 30px rgba(255,45,120,0.15), 0 8px 32px rgba(0,0,0,0.5)",
               }}
             >
-              <LogOut className="h-5 w-5 shrink-0" style={{ color: "#FF2D78" }} />
-              <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.8)" }}>
-                <span style={{ color: "#FF2D78" }}>{d.name}</span> left the game
-              </p>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ background: "rgba(255,45,120,0.15)" }}>
+                <LogOut className="h-4 w-4" style={{ color: "#FF2D78" }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-black" style={{ color: "#fff" }}>
+                  <span style={{ color: "#FF2D78" }}>{d.name}</span>{" left the game"}
+                </p>
+                <p className="text-[10px] font-bold" style={{ color: "rgba(255,255,255,0.35)" }}>Player disconnected</p>
+              </div>
               <button
                 onClick={() => dismissDeparted(d.id)}
-                className="ml-2 text-xs font-bold uppercase tracking-wider transition-colors hover:text-white"
-                style={{ color: "rgba(255,255,255,0.3)" }}
+                className="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all duration-200 hover:bg-white/10"
+                style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)" }}
                 aria-label={`Dismiss notification for ${d.name}`}
               >
                 OK
