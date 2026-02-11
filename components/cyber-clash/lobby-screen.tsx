@@ -20,9 +20,9 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
   const [countdownDisplay, setCountdownDisplay] = useState<number | null>(null);
   const [showQR, setShowQR] = useState(true);
 
-  // Build the join URL with room code
+  // Build the join URL with room code (use full URL including pathname for correct routing)
   const joinUrl = typeof window !== "undefined"
-    ? `${window.location.origin}?code=${room.id}`
+    ? `${window.location.origin}${window.location.pathname}?code=${room.id}`
     : "";
 
   const copyCode = useCallback(async () => {
@@ -56,7 +56,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
   const isCountdown = room.status === "countdown";
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4" style={{ background: "var(--cc-dark)" }}>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-3 sm:p-4" style={{ background: "var(--cc-dark)" }}>
       {/* Animated background */}
       <div className="pointer-events-none fixed inset-0" aria-hidden="true">
         <div className="absolute inset-0" style={{
@@ -74,7 +74,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
         <Sparkles className="absolute right-[40%] top-[10%] h-6 w-6 animate-float opacity-[0.05]" style={{ color: "#A855F7", animationDelay: "1.5s" }} />
       </div>
 
-      <div className="relative z-10 flex w-full max-w-lg flex-col items-center gap-8">
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center gap-5 sm:gap-8">
         {/* Room code card */}
         <div className="flex w-full flex-col items-center gap-3">
           <div className="flex items-center gap-2">
@@ -85,11 +85,11 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
           </div>
           <button
             onClick={copyCode}
-            className="group flex items-center gap-4 rounded-2xl border-[3px] px-8 py-5 transition-all duration-200 hover:border-[#00E5FF]"
+            className="group flex items-center gap-3 rounded-2xl border-[3px] px-5 py-3 transition-all duration-200 hover:border-[#00E5FF] sm:gap-4 sm:px-8 sm:py-5"
             style={{ borderColor: "rgba(0,229,255,0.3)", background: "rgba(0,229,255,0.06)" }}
             aria-label={`Copy room code ${room.id}`}
           >
-            <span className="text-4xl font-black tracking-[0.3em]" style={{ color: "#00E5FF" }}>
+            <span className="text-2xl font-black tracking-[0.3em] sm:text-4xl" style={{ color: "#00E5FF" }}>
               {room.id}
             </span>
             {copied ? (
@@ -120,13 +120,13 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
           {/* QR Code */}
           {showQR && joinUrl && (
             <div
-              className="animate-fade-in flex flex-col items-center gap-3 rounded-2xl border-[3px] p-5"
+              className="animate-fade-in flex flex-col items-center gap-2 rounded-2xl border-[3px] p-3 sm:gap-3 sm:p-5"
               style={{ borderColor: "rgba(0,229,255,0.15)", background: "rgba(0,229,255,0.04)" }}
             >
-              <div className="rounded-xl bg-white p-3">
-                <QRCode value={joinUrl} size={180} fgColor="#0B0F1A" bgColor="#ffffff" />
+              <div className="rounded-xl bg-white p-2 sm:p-3">
+                <QRCode value={joinUrl} size={140} fgColor="#0B0F1A" bgColor="#ffffff" />
               </div>
-              <p className="text-center text-xs font-bold" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <p className="text-center text-[10px] font-bold sm:text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Scan to join on another device
               </p>
             </div>
@@ -142,7 +142,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
             </h2>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {room.players.map((player, i) => {
               const isMe = player.id === playerId;
               const isPlayerHost = player.id === room.hostId;
@@ -151,7 +151,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
               return (
                 <div
                   key={player.id}
-                  className="animate-slide-in-left flex items-center gap-4 rounded-2xl border-[3px] px-5 py-4"
+                  className="animate-slide-in-left flex items-center gap-3 rounded-xl border-[3px] px-3 py-3 sm:gap-4 sm:rounded-2xl sm:px-5 sm:py-4"
                   style={{
                     background: isMe ? `${color}10` : "var(--cc-card)",
                     borderColor: isMe ? `${color}40` : "rgba(255,255,255,0.06)",
@@ -160,16 +160,16 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
                 >
                   {/* Avatar */}
                   <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-black"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-base font-black sm:h-12 sm:w-12 sm:rounded-xl sm:text-lg"
                     style={{ background: color, color: "var(--cc-dark)" }}
                   >
                     {player.name.charAt(0).toUpperCase()}
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-lg font-black" style={{ color: isMe ? color : "#fff" }}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <p className="truncate text-base font-black sm:text-lg" style={{ color: isMe ? color : "#fff" }}>
                         {player.name}
                       </p>
                       {isMe && (
@@ -198,7 +198,7 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
             {/* Waiting for more */}
             {room.players.length < 2 && (
               <div
-                className="flex items-center justify-center gap-3 rounded-2xl border-[3px] border-dashed px-5 py-6"
+                className="flex items-center justify-center gap-2 rounded-xl border-[3px] border-dashed px-4 py-4 sm:gap-3 sm:rounded-2xl sm:px-5 sm:py-6"
                 style={{ borderColor: "rgba(255,255,255,0.1)" }}
               >
                 <Loader2 className="h-5 w-5 animate-spin" style={{ color: "rgba(255,255,255,0.25)" }} />

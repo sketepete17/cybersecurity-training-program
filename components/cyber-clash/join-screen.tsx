@@ -82,7 +82,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4" style={{ background: "var(--cc-dark)" }}>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-3 sm:p-4" style={{ background: "var(--cc-dark)" }}>
       {/* Animated background elements */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
         {/* Grid */}
@@ -103,25 +103,25 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
         <div className="absolute left-[50%] top-[60%] h-48 w-48 animate-float rounded-full opacity-[0.03]" style={{ background: "radial-gradient(circle, #FFB800, transparent 70%)", animationDelay: "1.5s" }} />
       </div>
 
-      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-10">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-6 sm:gap-10">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-4 sm:gap-5">
           <div className="relative">
             <div className="absolute inset-[-10px] animate-glow-pulse rounded-3xl blur-xl" style={{ background: "#00E5FF", opacity: 0.15 }} />
             <div
-              className="relative flex h-28 w-28 items-center justify-center rounded-3xl border-[3px]"
+              className="relative flex h-20 w-20 items-center justify-center rounded-2xl border-[3px] sm:h-28 sm:w-28 sm:rounded-3xl"
               style={{ borderColor: "#00E5FF", background: "rgba(0,229,255,0.08)" }}
             >
-              <Shield className="h-14 w-14" style={{ color: "#00E5FF" }} strokeWidth={2.5} />
-              <Sparkles className="absolute -top-3 -right-3 h-6 w-6 animate-float" style={{ color: "#FFB800" }} />
-              <Zap className="absolute -bottom-2 -left-2 h-5 w-5 animate-float-delayed" style={{ color: "#39FF14" }} />
+              <Shield className="h-10 w-10 sm:h-14 sm:w-14" style={{ color: "#00E5FF" }} strokeWidth={2.5} />
+              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 animate-float sm:-top-3 sm:-right-3 sm:h-6 sm:w-6" style={{ color: "#FFB800" }} />
+              <Zap className="absolute -bottom-1.5 -left-1.5 h-4 w-4 animate-float-delayed sm:-bottom-2 sm:-left-2 sm:h-5 sm:w-5" style={{ color: "#39FF14" }} />
             </div>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <h1 className="text-balance text-center text-5xl font-black tracking-tight md:text-6xl" style={{ color: "#fff" }}>
+          <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+            <h1 className="text-balance text-center text-4xl font-black tracking-tight sm:text-5xl md:text-6xl" style={{ color: "#fff" }}>
               {"CYBER"}<span style={{ color: "#00E5FF" }}>{"SHIELD"}</span>
             </h1>
-            <p className="text-base font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-sm font-bold tracking-[0.2em] uppercase sm:text-base" style={{ color: "rgba(255,255,255,0.35)" }}>
               Cyber Security Party Game
             </p>
           </div>
@@ -129,10 +129,10 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
 
         {/* Main menu */}
         {mode === "menu" && (
-          <div className="flex w-full animate-fade-in flex-col gap-5">
+          <div className="flex w-full animate-fade-in flex-col gap-4 sm:gap-5">
             {/* Name input */}
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="player-name">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <label className="text-[10px] font-black tracking-[0.15em] uppercase sm:text-xs" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="player-name">
                 Your Name
               </label>
               <input
@@ -144,7 +144,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
                 maxLength={20}
                 autoComplete="off"
                 autoFocus
-                className="w-full rounded-2xl border-[3px] border-white/10 px-5 py-4 text-lg font-bold outline-none transition-all duration-200 focus:border-[#00E5FF]"
+                className="w-full rounded-xl border-[3px] border-white/10 px-4 py-3 text-base font-bold outline-none transition-all duration-200 focus:border-[#00E5FF] sm:rounded-2xl sm:px-5 sm:py-4 sm:text-lg"
                 style={{ background: "var(--cc-card)", color: "#fff" }}
               />
             </div>
@@ -153,35 +153,31 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
             <button
               onClick={handleCreate}
               disabled={loading}
-              className="jackbox-btn group flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl disabled:opacity-50"
+              className="jackbox-btn group flex w-full items-center justify-center gap-2 rounded-xl border-[3px] px-5 py-4 text-lg disabled:opacity-50 sm:gap-3 sm:rounded-2xl sm:px-6 sm:py-5 sm:text-xl"
               style={{
                 borderColor: "#00E5FF",
                 background: "rgba(0,229,255,0.1)",
                 color: "#00E5FF",
               }}
             >
-              <Zap className="h-6 w-6 transition-transform group-hover:rotate-12" />
+              <Zap className="h-5 w-5 transition-transform group-hover:rotate-12 sm:h-6 sm:w-6" />
               {loading ? "Creating Room..." : "Host a Game"}
             </button>
 
             {/* Join button */}
             <button
               onClick={() => {
-                if (!name.trim()) {
-                  setError("Enter your name first");
-                  return;
-                }
                 setError(null);
                 setMode("join");
               }}
-              className="jackbox-btn group flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl"
+              className="jackbox-btn group flex w-full items-center justify-center gap-2 rounded-xl border-[3px] px-5 py-4 text-lg sm:gap-3 sm:rounded-2xl sm:px-6 sm:py-5 sm:text-xl"
               style={{
                 borderColor: "#FFB800",
                 background: "rgba(255,184,0,0.1)",
                 color: "#FFB800",
               }}
             >
-              <Users className="h-6 w-6 transition-transform group-hover:scale-110" />
+              <Users className="h-5 w-5 transition-transform group-hover:scale-110 sm:h-6 sm:w-6" />
               Join a Game
             </button>
 
@@ -196,9 +192,28 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
 
         {/* Join form */}
         {mode === "join" && (
-          <div className="flex w-full animate-fade-in flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="room-code">
+          <div className="flex w-full animate-fade-in flex-col gap-4 sm:gap-5">
+            {/* Name input -- always shown so QR code users can enter their name */}
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <label className="text-[10px] font-black tracking-[0.15em] uppercase sm:text-xs" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="join-player-name">
+                Your Name
+              </label>
+              <input
+                id="join-player-name"
+                type="text"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setError(null); }}
+                placeholder="Enter your name..."
+                maxLength={20}
+                autoComplete="off"
+                autoFocus
+                className="w-full rounded-xl border-[3px] border-white/10 px-4 py-3 text-base font-bold outline-none transition-all duration-200 focus:border-[#00E5FF] sm:rounded-2xl sm:px-5 sm:py-4 sm:text-lg"
+                style={{ background: "var(--cc-card)", color: "#fff" }}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <label className="text-[10px] font-black tracking-[0.15em] uppercase sm:text-xs" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="room-code">
                 Room Code
               </label>
               <input
@@ -209,8 +224,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
                 placeholder="ABCDE"
                 maxLength={5}
                 autoComplete="off"
-                autoFocus
-                className="w-full rounded-2xl border-[3px] border-white/10 px-5 py-4 text-center text-3xl font-black tracking-[0.4em] uppercase outline-none transition-all duration-200 focus:border-[#FFB800]"
+                className="w-full rounded-xl border-[3px] border-white/10 px-4 py-3 text-center text-2xl font-black tracking-[0.4em] uppercase outline-none transition-all duration-200 focus:border-[#FFB800] sm:rounded-2xl sm:px-5 sm:py-4 sm:text-3xl"
                 style={{ background: "var(--cc-card)", color: "#fff" }}
               />
             </div>
@@ -218,7 +232,7 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
             <button
               onClick={handleJoin}
               disabled={loading || roomCode.length < 5}
-              className="jackbox-btn flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl disabled:opacity-40"
+              className="jackbox-btn flex w-full items-center justify-center gap-2 rounded-xl border-[3px] px-5 py-4 text-lg disabled:opacity-40 sm:gap-3 sm:rounded-2xl sm:px-6 sm:py-5 sm:text-xl"
               style={{
                 borderColor: "#FFB800",
                 background: "rgba(255,184,0,0.1)",
