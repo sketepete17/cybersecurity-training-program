@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Cyber Clash - Phish or Legit?",
+  title: "CyberShield - Phish or Legit?",
   description:
-    "A multiplayer cybersecurity awareness game. Read suspicious emails, spot phishing attacks, and outscore your opponents in real-time.",
+    "A real-time multiplayer cybersecurity game. Read suspicious emails, spot phishing attacks, and outscore your opponents.",
 };
 
-export default function CyberClashLayout({
+export default function CyberShieldLayout({
   children,
 }: {
   children: React.ReactNode;

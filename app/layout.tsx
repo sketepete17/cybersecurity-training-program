@@ -9,24 +9,24 @@ import { CTFProvider } from "@/lib/ctf-store";
 import { MobileSidebarProvider } from "@/components/training/sidebar";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({ subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
   title: {
-    default: "Cyber Clash - Phish or Legit?",
-    template: "%s | Cyber Clash",
+    default: "CyberShield - Phish or Legit?",
+    template: "%s | CyberShield",
   },
   description:
-    "A multiplayer party game for cybersecurity awareness. Read suspicious emails, spot phishing attacks, and outscore your opponents.",
-  keywords: ["cybersecurity", "phishing", "game", "training", "multiplayer", "party game"],
+    "A real-time multiplayer party game for cybersecurity awareness. Read suspicious emails, spot phishing attacks, and outscore your opponents.",
+  keywords: ["cybersecurity", "phishing", "game", "training", "multiplayer", "party game", "cybershield"],
   authors: [{ name: "CyberShield" }],
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Cyber Clash",
-    title: "Cyber Clash - Phish or Legit?",
-    description: "A multiplayer party game for cybersecurity awareness training",
+    siteName: "CyberShield",
+    title: "CyberShield - Phish or Legit?",
+    description: "A real-time multiplayer party game for cybersecurity awareness training",
   },
   robots: {
     index: true,
@@ -66,7 +66,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${inter.className} ${jetbrainsMono.variable} font-sans antialiased`}>
         <a 
           href="#main-content" 
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-ring"

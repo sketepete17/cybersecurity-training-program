@@ -1,205 +1,230 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ShieldAlert, Zap, Users, ChevronRight, Fish, ShieldCheck } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Shield, Wifi, Users, Zap, ArrowLeft } from "lucide-react";
 
 interface JoinScreenProps {
-  onJoin: (name: string) => void;
+  onCreated: (roomId: string, playerId: string) => void;
+  onJoined: (roomId: string, playerId: string) => void;
 }
 
-const PLAYER_COLORS = [
-  "bg-[var(--cc-cyan)]",
-  "bg-[var(--cc-magenta)]",
-  "bg-[var(--cc-lime)]",
-  "bg-[var(--cc-amber)]",
-];
-
-export function JoinScreen({ onJoin }: JoinScreenProps) {
+export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
   const [name, setName] = useState("");
-  const [error, setError] = useState("");
-  const [mounted, setMounted] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [mode, setMode] = useState<"menu" | "join">("menu");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError("You need a name to play!");
+  async function handleCreate() {
+    if (!name.trim()) {
+      setError("Enter your name to play");
       return;
     }
-    if (trimmed.length > 20) {
-      setError("Keep it under 20 characters");
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/game/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hostName: name.trim() }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        onCreated(data.room.id, data.playerId);
+      }
+    } catch {
+      setError("Failed to create room. Try again.");
+    }
+    setLoading(false);
+  }
+
+  async function handleJoin() {
+    if (!name.trim()) {
+      setError("Enter your name to play");
       return;
     }
-    setError("");
-    onJoin(trimmed);
-  };
+    if (roomCode.trim().length < 5) {
+      setError("Enter a valid 5-character room code");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/game/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomId: roomCode.trim().toUpperCase(), playerName: name.trim() }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        setError(data.error);
+      } else {
+        onJoined(data.room.id, data.playerId);
+      }
+    } catch {
+      setError("Failed to join room. Try again.");
+    }
+    setLoading(false);
+  }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-8" style={{ background: "var(--cc-dark)" }}>
-      {/* Animated background elements */}
-      <div className="pointer-events-none absolute inset-0">
-        {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{
+    <div className="flex min-h-screen flex-col items-center justify-center p-4" style={{ background: "var(--cc-dark)" }}>
+      {/* Background ambient */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: "linear-gradient(rgba(0,229,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.5) 1px, transparent 1px)",
           backgroundSize: "80px 80px",
         }} />
-        {/* Glow orbs */}
-        <div className="absolute -top-40 -left-40 h-80 w-80 rounded-full opacity-20" style={{ background: "radial-gradient(circle, var(--cc-cyan), transparent 70%)" }} />
-        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full opacity-15" style={{ background: "radial-gradient(circle, var(--cc-magenta), transparent 70%)" }} />
-        {/* Floating icons */}
-        <Fish className="absolute top-[15%] left-[8%] h-8 w-8 animate-float opacity-10" style={{ color: "var(--cc-magenta)", animationDelay: "0s" }} />
-        <ShieldCheck className="absolute top-[25%] right-[12%] h-6 w-6 animate-float opacity-10" style={{ color: "var(--cc-lime)", animationDelay: "1s" }} />
-        <ShieldAlert className="absolute bottom-[20%] left-[15%] h-7 w-7 animate-float opacity-10" style={{ color: "var(--cc-cyan)", animationDelay: "0.5s" }} />
-        <Zap className="absolute bottom-[30%] right-[8%] h-6 w-6 animate-float opacity-10" style={{ color: "var(--cc-amber)", animationDelay: "1.5s" }} />
+        <div className="absolute left-[10%] top-[20%] h-72 w-72 animate-float rounded-full opacity-[0.04]" style={{ background: "radial-gradient(circle, #00E5FF, transparent 70%)" }} />
+        <div className="absolute right-[10%] bottom-[25%] h-56 w-56 animate-float-delayed rounded-full opacity-[0.04]" style={{ background: "radial-gradient(circle, #FF2D78, transparent 70%)" }} />
       </div>
 
-      {/* Main content */}
-      <div className={cn(
-        "relative z-10 flex w-full max-w-md flex-col items-center transition-all duration-700",
-        mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-      )}>
-        {/* Logo / Icon */}
-        <div className="mb-8 flex flex-col items-center">
-          <div className="relative mb-6">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center gap-10">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative">
+            <div className="absolute inset-[-8px] animate-glow-pulse rounded-3xl blur-xl" style={{ background: "#00E5FF", opacity: 0.15 }} />
             <div
-              className="flex h-28 w-28 items-center justify-center rounded-[2rem] animate-glow-pulse"
-              style={{ background: "var(--cc-cyan)", boxShadow: "0 0 60px rgba(0,229,255,0.3)" }}
+              className="relative flex h-24 w-24 items-center justify-center rounded-3xl border-[3px]"
+              style={{ borderColor: "#00E5FF", background: "rgba(0,229,255,0.08)" }}
             >
-              <ShieldAlert className="h-14 w-14" style={{ color: "var(--cc-dark)" }} />
-            </div>
-            {/* Notification dot */}
-            <div
-              className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-black animate-bounce-in"
-              style={{ background: "var(--cc-magenta)", color: "#fff", animationDelay: "0.3s" }}
-            >
-              !
+              <Shield className="h-12 w-12" style={{ color: "#00E5FF" }} strokeWidth={2.5} />
             </div>
           </div>
-
-          {/* Title */}
-          <h1 className="mb-1 text-center text-7xl font-black uppercase leading-none tracking-tighter" style={{ color: "#fff" }}>
-            CYBER
-            <br />
-            <span style={{ color: "var(--cc-cyan)" }}>CLASH</span>
-          </h1>
-
-          {/* Subtitle badge */}
-          <div
-            className="mt-4 rounded-full px-6 py-2 text-sm font-black uppercase tracking-[0.2em]"
-            style={{
-              background: "rgba(0,229,255,0.1)",
-              border: "2px solid rgba(0,229,255,0.3)",
-              color: "var(--cc-cyan)",
-            }}
-          >
-            Phish or Legit?
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-center text-5xl font-black tracking-tight md:text-6xl" style={{ color: "#fff" }}>
+              {"CYBER"}<span style={{ color: "#00E5FF" }}>{"SHIELD"}</span>
+            </h1>
+            <p className="text-base font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Phish or Legit?
+            </p>
           </div>
-
-          <p className="mt-5 max-w-sm text-center text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-            Read suspicious emails. Spot the scams. Beat your opponents. Learn to protect yourself from cyber threats.
-          </p>
         </div>
 
-        {/* Join Card */}
-        <div
-          className="jackbox-card w-full p-8"
-          style={{
-            background: "var(--cc-card)",
-            borderColor: "rgba(0,229,255,0.15)",
-          }}
-        >
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div>
-              <label htmlFor="player-name" className="mb-2 block text-xs font-black uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Your Player Name
+        {/* Main menu */}
+        {mode === "menu" && (
+          <div className="flex w-full animate-fade-in flex-col gap-5">
+            {/* Name input */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="player-name">
+                Your Name
               </label>
               <input
                 id="player-name"
                 type="text"
                 value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (error) setError("");
-                }}
-                placeholder="Enter your handle..."
+                onChange={(e) => { setName(e.target.value); setError(null); }}
+                placeholder="Enter your name..."
                 maxLength={20}
-                className={cn(
-                  "w-full rounded-2xl border-[3px] px-5 py-4 text-lg font-bold outline-none transition-all duration-200",
-                  error ? "border-[var(--cc-magenta)]" : "border-transparent focus:border-[var(--cc-cyan)]"
-                )}
-                style={{
-                  background: "var(--cc-card-light)",
-                  color: "#fff",
-                }}
                 autoComplete="off"
                 autoFocus
+                className="w-full rounded-2xl border-[3px] border-white/10 px-5 py-4 text-lg font-bold outline-none transition-all duration-200 focus:border-[#00E5FF]"
+                style={{ background: "var(--cc-card)", color: "#fff" }}
               />
-              {error && (
-                <p className="mt-2 text-sm font-bold" style={{ color: "var(--cc-magenta)" }} role="alert">
-                  {error}
-                </p>
-              )}
+            </div>
+
+            {/* Host button */}
+            <button
+              onClick={handleCreate}
+              disabled={loading}
+              className="jackbox-btn group flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl disabled:opacity-50"
+              style={{
+                borderColor: "#00E5FF",
+                background: "rgba(0,229,255,0.1)",
+                color: "#00E5FF",
+              }}
+            >
+              <Zap className="h-6 w-6 transition-transform group-hover:rotate-12" />
+              {loading ? "Creating Room..." : "Host a Game"}
+            </button>
+
+            {/* Join button */}
+            <button
+              onClick={() => {
+                if (!name.trim()) {
+                  setError("Enter your name first");
+                  return;
+                }
+                setError(null);
+                setMode("join");
+              }}
+              className="jackbox-btn group flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl"
+              style={{
+                borderColor: "#FFB800",
+                background: "rgba(255,184,0,0.1)",
+                color: "#FFB800",
+              }}
+            >
+              <Users className="h-6 w-6" />
+              Join a Game
+            </button>
+
+            {/* Feature tags */}
+            <div className="mt-2 flex items-center justify-center gap-6 text-sm font-semibold" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <span className="flex items-center gap-1.5"><Wifi className="h-4 w-4" /> Real-time</span>
+              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Multiplayer</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> 10 Rounds</span>
+            </div>
+          </div>
+        )}
+
+        {/* Join form */}
+        {mode === "join" && (
+          <div className="flex w-full animate-fade-in flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-black tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="room-code">
+                Room Code
+              </label>
+              <input
+                id="room-code"
+                type="text"
+                value={roomCode}
+                onChange={(e) => { setRoomCode(e.target.value.toUpperCase()); setError(null); }}
+                placeholder="ABCDE"
+                maxLength={5}
+                autoComplete="off"
+                autoFocus
+                className="w-full rounded-2xl border-[3px] border-white/10 px-5 py-4 text-center text-3xl font-black tracking-[0.4em] uppercase outline-none transition-all duration-200 focus:border-[#FFB800]"
+                style={{ background: "var(--cc-card)", color: "#fff" }}
+              />
             </div>
 
             <button
-              type="submit"
-              className="jackbox-btn group flex w-full items-center justify-center gap-3 rounded-2xl px-6 py-5 text-xl"
+              onClick={handleJoin}
+              disabled={loading || roomCode.length < 5}
+              className="jackbox-btn flex w-full items-center justify-center gap-3 rounded-2xl border-[3px] px-6 py-5 text-xl disabled:opacity-40"
               style={{
-                background: "var(--cc-cyan)",
-                color: "var(--cc-dark)",
-                boxShadow: "0 4px 30px rgba(0,229,255,0.3), inset 0 1px 0 rgba(255,255,255,0.2)",
+                borderColor: "#FFB800",
+                background: "rgba(255,184,0,0.1)",
+                color: "#FFB800",
               }}
             >
-              <Zap className="h-6 w-6 transition-transform duration-200 group-hover:rotate-12" />
-              JOIN GAME
-              <ChevronRight className="h-6 w-6 transition-transform duration-200 group-hover:translate-x-1" />
+              {loading ? "Joining..." : "Join Room"}
             </button>
-          </form>
-        </div>
 
-        {/* Feature chips */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {[
-            { icon: Users, label: "Multiplayer", color: "var(--cc-cyan)" },
-            { icon: Zap, label: "Real-time", color: "var(--cc-amber)" },
-            { icon: ShieldAlert, label: "7 Rounds", color: "var(--cc-lime)" },
-          ].map(({ icon: Icon, label, color }) => (
-            <div
-              key={label}
-              className="flex items-center gap-2 rounded-full px-4 py-2"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
+            <button
+              onClick={() => { setMode("menu"); setError(null); setRoomCode(""); }}
+              className="flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors hover:text-white/60"
+              style={{ color: "rgba(255,255,255,0.35)" }}
             >
-              <Icon className="h-4 w-4" style={{ color }} />
-              <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>
-                {label}
-              </span>
-            </div>
-          ))}
-        </div>
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </button>
+          </div>
+        )}
 
-        {/* Fake player avatars */}
-        <div className="mt-6 flex items-center gap-1">
-          {PLAYER_COLORS.map((bgClass, i) => (
-            <div
-              key={i}
-              className={cn("flex h-8 w-8 items-center justify-center rounded-full text-xs font-black", bgClass)}
-              style={{ color: "var(--cc-dark)", marginLeft: i > 0 ? "-6px" : "0", animationDelay: `${i * 0.1}s` }}
-            >
-              {i + 1}
-            </div>
-          ))}
-          <span className="ml-2 text-xs font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
-            players waiting...
-          </span>
-        </div>
+        {/* Error */}
+        {error && (
+          <div
+            className="w-full animate-pop-in rounded-2xl border-[3px] px-5 py-3 text-center text-sm font-bold"
+            style={{ borderColor: "#FF2D78", background: "rgba(255,45,120,0.1)", color: "#FF2D78" }}
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
