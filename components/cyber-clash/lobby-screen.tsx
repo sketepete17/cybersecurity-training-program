@@ -15,7 +15,7 @@ interface LobbyScreenProps {
   onStartGame: () => void;
 }
 
-const PUBLIC_DOMAIN = "https://cybershield.work";
+const PUBLIC_DOMAIN = "https://cybertrain.work";
 
 export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartGame }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false);

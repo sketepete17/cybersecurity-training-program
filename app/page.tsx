@@ -23,16 +23,6 @@ function getSessionValue(key: string): string | null {
 export default function CyberShieldPage() {
   const [roomId, setRoomId] = useState<string | null>(() => getSessionValue(SESSION_KEY_ROOM));
   const [playerId, setPlayerId] = useState<string | null>(() => getSessionValue(SESSION_KEY_PLAYER));
-  const [publicUrl, setPublicUrl] = useState<string>("");
-
-  // Fetch the real public URL from the server to avoid internal VM hostnames in QR codes
-  useEffect(() => {
-    fetch("/api/public-url")
-      .then((r) => r.json())
-      .then((d) => { if (d.url) setPublicUrl(d.url); })
-      .catch(() => {});
-  }, []);
-
   // Persist roomId and playerId to sessionStorage
   useEffect(() => {
     try {
@@ -146,7 +136,6 @@ export default function CyberShieldPage() {
           room={room}
           playerId={playerId}
           isHost={isHost}
-          publicUrl={publicUrl}
           onStartCountdown={handleStartCountdown}
           onStartGame={handleStartGame}
         />
