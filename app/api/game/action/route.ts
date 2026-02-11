@@ -37,6 +37,13 @@ export async function POST(req: Request) {
         break;
       }
 
+      case "battle_submit": {
+        const bIdx = Number(body.questionIndex);
+        const password = String(body.password ?? "");
+        room = await submitBattlePassword(roomId, playerId, bIdx, password);
+        break;
+      }
+
       case "show_results":
         room = await showResults(roomId, playerId);
         break;

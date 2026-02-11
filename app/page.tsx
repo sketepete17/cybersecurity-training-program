@@ -95,6 +95,17 @@ export default function CyberShieldPage() {
     [sendAction, room]
   );
 
+  const handleBattleSubmit = useCallback(
+    (password: string) => {
+      if (!room) return;
+      sendAction("battle_submit", {
+        questionIndex: room.currentQuestion,
+        password,
+      });
+    },
+    [sendAction, room]
+  );
+
   const handleShowResults = useCallback(() => {
     sendAction("show_results");
   }, [sendAction]);
@@ -160,6 +171,7 @@ export default function CyberShieldPage() {
           playerId={playerId}
           isHost={isHost}
           onAnswer={handleAnswer}
+          onBattleSubmit={handleBattleSubmit}
           onShowResults={handleShowResults}
           onNextQuestion={handleNextQuestion}
         />
