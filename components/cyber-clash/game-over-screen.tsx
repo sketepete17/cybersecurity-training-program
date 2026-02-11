@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Trophy, RotateCcw, Crown, Star, Medal, Sparkles, Shield, Home } from "lucide-react";
 import type { Player } from "@/lib/game-room";
-import Link from "next/link";
 
 interface GameOverScreenProps {
   players: Player[];
@@ -209,14 +208,14 @@ export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: Gam
             </div>
           )}
 
-          <Link
-            href="/"
+          <button
+            onClick={() => window.location.reload()}
             className="flex items-center justify-center gap-2 rounded-2xl border-[3px] px-6 py-4 text-base font-black uppercase tracking-wider transition-all duration-200 hover:border-white/20"
             style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}
           >
             <Home className="h-5 w-5" />
-            Back to Home
-          </Link>
+            Leave Game
+          </button>
         </div>
 
         {/* Footer */}
