@@ -9,21 +9,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing roomId or playerId" }, { status: 400 });
     }
 
-    // Heartbeat to keep player connected
     const room = await heartbeat(roomId, playerId);
 
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
-    // Strip question answers during active play so players can't cheat
-    // But allow full data during "showing_results" and "game_over"
+    // Strip answers during active play so players can't cheat
     const safeRoom = { ...room };
     if (room.status === "playing") {
       safeRoom.questionSet = room.questionSet.map((q, i) => {
-        // Only strip the current and future questions
         if (i >= room.currentQuestion) {
-          return { ...q, isPhishing: undefined as unknown as boolean, explanation: "", clues: [] };
+          const stripped = { ...q, explanation: "", funFact: "", clues: [] };
+          if (q.type === "phish") return { ...stripped, isPhishing: undefined as unknown as boolean };
+          if (q.type === "password") return { ...stripped, correctAnswer: -1 };
+          if (q.type === "spot_url") return { ...stripped, correctIndex: -1 };
+          return stripped;
         }
         return q;
       });

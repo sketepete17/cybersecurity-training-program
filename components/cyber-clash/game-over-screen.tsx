@@ -9,6 +9,7 @@ interface GameOverScreenProps {
   myPlayerId: string;
   isHost: boolean;
   onPlayAgain: () => void;
+  onLeave: () => void;
 }
 
 const AVATAR_COLORS = ["#00E5FF", "#FF2D78", "#39FF14", "#FFB800", "#A855F7", "#F97316", "#06B6D4", "#EC4899"];
@@ -32,7 +33,7 @@ function ConfettiPiece({ delay, color, left, size }: { delay: number; color: str
   );
 }
 
-export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: GameOverScreenProps) {
+export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain, onLeave }: GameOverScreenProps) {
   const [mounted, setMounted] = useState(false);
   const [showPlayers, setShowPlayers] = useState(false);
 
@@ -227,7 +228,7 @@ export function GameOverScreen({ players, myPlayerId, isHost, onPlayAgain }: Gam
           )}
 
           <button
-            onClick={() => window.location.reload()}
+            onClick={onLeave}
             className="flex items-center justify-center gap-2 rounded-2xl border-[3px] px-6 py-4 text-base font-black uppercase tracking-wider transition-all duration-200 hover:border-white/20"
             style={{ borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.4)" }}
           >
