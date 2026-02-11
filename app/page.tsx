@@ -1,21 +1,31 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useGameRoom } from "@/hooks/use-game-room";
 import { JoinScreen } from "@/components/cyber-clash/join-screen";
 import { LobbyScreen } from "@/components/cyber-clash/lobby-screen";
 import { GameScreen } from "@/components/cyber-clash/game-screen";
 import { GameOverScreen } from "@/components/cyber-clash/game-over-screen";
+import { LogOut } from "lucide-react";
 
 export default function CyberShieldPage() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
 
-  const { room, sendAction } = useGameRoom({
+  const { room, sendAction, departedPlayers, dismissDeparted } = useGameRoom({
     roomId,
     playerId,
     enabled: !!roomId && !!playerId,
   });
+
+  // Auto-dismiss departure toasts after 4 seconds
+  useEffect(() => {
+    if (departedPlayers.length === 0) return;
+    const timers = departedPlayers.map((d) =>
+      setTimeout(() => dismissDeparted(d.id), 4000)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [departedPlayers, dismissDeparted]);
 
   const isHost = room ? room.hostId === playerId : false;
 
@@ -109,6 +119,37 @@ export default function CyberShieldPage() {
           onPlayAgain={handlePlayAgain}
           onLeave={handleLeave}
         />
+      )}
+
+      {/* Player departure toasts */}
+      {departedPlayers.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 flex-col gap-2">
+          {departedPlayers.map((d) => (
+            <div
+              key={d.id}
+              className="flex items-center gap-3 rounded-2xl border-[3px] px-5 py-3 shadow-2xl"
+              style={{
+                background: "rgba(11,15,26,0.95)",
+                borderColor: "rgba(255,45,120,0.3)",
+                backdropFilter: "blur(12px)",
+                animation: "slide-up 0.4s cubic-bezier(0.16,1,0.3,1), fade-out 0.5s ease 3.5s forwards",
+              }}
+            >
+              <LogOut className="h-5 w-5 shrink-0" style={{ color: "#FF2D78" }} />
+              <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.8)" }}>
+                <span style={{ color: "#FF2D78" }}>{d.name}</span> left the game
+              </p>
+              <button
+                onClick={() => dismissDeparted(d.id)}
+                className="ml-2 text-xs font-bold uppercase tracking-wider transition-colors hover:text-white"
+                style={{ color: "rgba(255,255,255,0.3)" }}
+                aria-label={`Dismiss notification for ${d.name}`}
+              >
+                OK
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </main>
   );
