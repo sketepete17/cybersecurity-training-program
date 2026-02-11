@@ -167,10 +167,6 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
             {/* Join button */}
             <button
               onClick={() => {
-                if (!name.trim()) {
-                  setError("Enter your name first");
-                  return;
-                }
                 setError(null);
                 setMode("join");
               }}
@@ -197,6 +193,25 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
         {/* Join form */}
         {mode === "join" && (
           <div className="flex w-full animate-fade-in flex-col gap-4 sm:gap-5">
+            {/* Name input -- always shown so QR code users can enter their name */}
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <label className="text-[10px] font-black tracking-[0.15em] uppercase sm:text-xs" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="join-player-name">
+                Your Name
+              </label>
+              <input
+                id="join-player-name"
+                type="text"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setError(null); }}
+                placeholder="Enter your name..."
+                maxLength={20}
+                autoComplete="off"
+                autoFocus
+                className="w-full rounded-xl border-[3px] border-white/10 px-4 py-3 text-base font-bold outline-none transition-all duration-200 focus:border-[#00E5FF] sm:rounded-2xl sm:px-5 sm:py-4 sm:text-lg"
+                style={{ background: "var(--cc-card)", color: "#fff" }}
+              />
+            </div>
+
             <div className="flex flex-col gap-1.5 sm:gap-2">
               <label className="text-[10px] font-black tracking-[0.15em] uppercase sm:text-xs" style={{ color: "rgba(255,255,255,0.4)" }} htmlFor="room-code">
                 Room Code
@@ -209,7 +224,6 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
                 placeholder="ABCDE"
                 maxLength={5}
                 autoComplete="off"
-                autoFocus
                 className="w-full rounded-xl border-[3px] border-white/10 px-4 py-3 text-center text-2xl font-black tracking-[0.4em] uppercase outline-none transition-all duration-200 focus:border-[#FFB800] sm:rounded-2xl sm:px-5 sm:py-4 sm:text-3xl"
                 style={{ background: "var(--cc-card)", color: "#fff" }}
               />

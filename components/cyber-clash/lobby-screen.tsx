@@ -20,9 +20,9 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
   const [countdownDisplay, setCountdownDisplay] = useState<number | null>(null);
   const [showQR, setShowQR] = useState(true);
 
-  // Build the join URL with room code
+  // Build the join URL with room code (use full URL including pathname for correct routing)
   const joinUrl = typeof window !== "undefined"
-    ? `${window.location.origin}?code=${room.id}`
+    ? `${window.location.origin}${window.location.pathname}?code=${room.id}`
     : "";
 
   const copyCode = useCallback(async () => {
