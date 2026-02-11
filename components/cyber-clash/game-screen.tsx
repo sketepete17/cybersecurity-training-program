@@ -144,6 +144,18 @@ export function GameScreen({ room, playerId, isHost, onAnswer, onBattleSubmit, o
 
   if (!round) return null;
 
+  if (roundType === "password_battle") {
+    const br = round as PasswordBattleRound;
+    console.log("[v0] Password Battle round:", {
+      type: br.type,
+      scenario: br.scenario,
+      challengerIds: br.challengerIds,
+      submissions: br.submissions,
+      hasChallengerIds: Array.isArray(br.challengerIds),
+      hasSubmissions: typeof br.submissions === "object",
+    });
+  }
+
   return (
     <div className="flex min-h-screen flex-col lg:flex-row" style={{ background: "var(--cc-dark)" }}>
       <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
@@ -727,8 +739,11 @@ function PasswordBattleContent({
 }) {
   const [input, setInput] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  const isChallenger = round.challengerIds.includes(playerId);
-  const alreadySubmitted = !!round.submissions[playerId];
+  // Guard against missing data from Redis deserialization
+  const challengerIds = round.challengerIds ?? [];
+  const submissions = round.submissions ?? {};
+  const isChallenger = challengerIds.includes(playerId);
+  const alreadySubmitted = !!submissions[playerId];
   const hasSubmitted = submitted || alreadySubmitted;
 
   // Reset input when question changes
@@ -743,8 +758,8 @@ function PasswordBattleContent({
     onSubmit(input.trim());
   };
 
-  const challenger1 = players.find((p) => p.id === round.challengerIds[0]);
-  const challenger2 = players.find((p) => p.id === round.challengerIds[1]);
+  const challenger1 = players.find((p) => p.id === challengerIds[0]);
+  const challenger2 = players.find((p) => p.id === challengerIds[1]);
 
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
@@ -835,8 +850,8 @@ function PasswordBattleContent({
               {challenger1?.name} and {challenger2?.name} are creating passwords...
             </p>
             <div className="flex items-center gap-3">
-              {round.challengerIds.map((cid) => {
-                const done = !!round.submissions[cid];
+              {challengerIds.map((cid) => {
+                const done = !!submissions[cid];
                 return (
                   <div key={cid} className="flex items-center gap-1.5">
                     <div className="h-3 w-3 rounded-full" style={{ background: done ? "#39FF14" : "rgba(255,255,255,0.1)", boxShadow: done ? "0 0 6px rgba(57,255,20,0.5)" : "none" }} />
@@ -881,9 +896,11 @@ function BattleResultsReveal({
   round: PasswordBattleRound; room: GameRoom; playerId: string;
   showExplanation: boolean; showFunFact: boolean; isHost: boolean; onNextQuestion: () => void;
 }) {
-  const [id1, id2] = round.challengerIds;
-  const sub1 = round.submissions[id1];
-  const sub2 = round.submissions[id2];
+  const challengerIds = round.challengerIds ?? [];
+  const submissions = round.submissions ?? {};
+  const [id1, id2] = challengerIds.length >= 2 ? challengerIds : ["", ""];
+  const sub1 = submissions[id1];
+  const sub2 = submissions[id2];
   const p1 = room.players.find((p) => p.id === id1);
   const p2 = room.players.find((p) => p.id === id2);
   const score1 = sub1?.score ?? 0;

@@ -617,6 +617,10 @@ export async function submitBattlePassword(
   const round = room.questionSet[questionIndex];
   if (round.type !== "password_battle") return null;
 
+  // Guard against missing data from Redis deserialization
+  if (!round.submissions) round.submissions = {};
+  if (!round.challengerIds) return null;
+
   // Only challengers can submit
   if (!round.challengerIds.includes(playerId)) return null;
 
@@ -722,7 +726,8 @@ export async function resetRoom(roomId: string, playerId: string): Promise<GameR
   room.currentQuestion = 0;
   room.questionStartedAt = null;
   room.countdownEndsAt = null;
-  room.questionSet = buildQuestionSet();
+  const playerIds = room.players.map((p) => p.id);
+  room.questionSet = buildQuestionSet(playerIds);
   room.totalQuestions = room.questionSet.length;
   for (const p of room.players) { p.answers = []; p.score = 0; p.streak = 0; p.lastAnswerTime = null; }
   await saveRoom(room);
