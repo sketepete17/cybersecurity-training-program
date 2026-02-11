@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Shield, Wifi, Users, Zap, ArrowLeft, Fish, ShieldCheck, Mail, Lock, Sparkles, AlertTriangle } from "lucide-react";
 
 interface JoinScreenProps {
@@ -14,6 +14,18 @@ export function JoinScreen({ onCreated, onJoined }: JoinScreenProps) {
   const [mode, setMode] = useState<"menu" | "join">("menu");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-fill room code from URL query param (e.g., ?code=ABC12)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    if (code && code.length === 5) {
+      setRoomCode(code.toUpperCase());
+      setMode("join");
+      // Clean up the URL without reloading
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   async function handleCreate() {
     if (!name.trim()) {
