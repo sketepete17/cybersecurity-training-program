@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Minimal QR Code generator using Canvas.
- * Encodes alphanumeric URLs into a Version 4 (33x33) QR code.
- * Uses a simple byte-mode encoding with mask pattern 0.
+ * QR Code generator using Canvas.
+ * Supports Version 1-6 with auto-detection based on content length.
+ * Uses byte-mode encoding with Error Correction Level L and mask pattern 0.
  */
 
 interface QRCodeProps {
@@ -15,7 +15,7 @@ interface QRCodeProps {
   bgColor?: string;
 }
 
-// Reed-Solomon GF(256) math helpers
+// ---------- GF(256) math ----------
 const GF_EXP = new Uint8Array(512);
 const GF_LOG = new Uint8Array(256);
 (() => {
@@ -34,7 +34,7 @@ function gfMul(a: number, b: number) {
 }
 
 function rsEncode(data: number[], ecLen: number): number[] {
-  const gen: number[] = new Array(ecLen + 1).fill(0);
+  const gen = new Array(ecLen + 1).fill(0);
   gen[0] = 1;
   for (let i = 0; i < ecLen; i++) {
     for (let j = i + 1; j >= 1; j--) {
@@ -50,41 +50,53 @@ function rsEncode(data: number[], ecLen: number): number[] {
   return ec;
 }
 
-function generateQR(text: string): boolean[][] {
-  // Version 2, Error Correction Level L
-  // Capacity: 32 bytes (byte mode)
-  const version = 2;
-  const size = 17 + version * 4; // 25x25
-  const ecLen = 10; // EC codewords for V2-L
-  const dataCapacity = 34; // Total codewords: 44, data: 34
+// ---------- Version configs (Level L) ----------
+// [totalCodewords, dataCodewords, ecCodewordsPerBlock, numBlocks, alignmentPatternCenters[]]
+const VERSION_CONFIGS: Record<number, { total: number; data: number; ec: number; blocks: number; align: number[] }> = {
+  1: { total: 26, data: 19, ec: 7, blocks: 1, align: [] },
+  2: { total: 44, data: 34, ec: 10, blocks: 1, align: [6, 18] },
+  3: { total: 70, data: 55, ec: 15, blocks: 1, align: [6, 22] },
+  4: { total: 100, data: 80, ec: 20, blocks: 1, align: [6, 26] },
+  5: { total: 134, data: 108, ec: 26, blocks: 1, align: [6, 30] },
+  6: { total: 172, data: 136, ec: 18, blocks: 2, align: [6, 34] },
+};
 
-  // Encode data in byte mode
+// Format info bits for Level L, mask 0
+const FORMAT_BITS = 0x77C4;
+
+function pickVersion(byteLen: number): number {
+  // Byte mode overhead: 4-bit mode + 8-bit count (V1-9) = 12 bits = ~2 bytes
+  const overhead = 2;
+  for (let v = 1; v <= 6; v++) {
+    if (VERSION_CONFIGS[v].data >= byteLen + overhead) return v;
+  }
+  return 6; // Max we support
+}
+
+function generateQR(text: string): boolean[][] {
   const textBytes: number[] = [];
   for (let i = 0; i < text.length; i++) textBytes.push(text.charCodeAt(i));
 
-  // Mode indicator (0100 = byte) + character count (8 bits for V1-9)
+  const version = pickVersion(textBytes.length);
+  const config = VERSION_CONFIGS[version];
+  const size = 17 + version * 4;
+
+  // --- Encode data in byte mode ---
   const bits: number[] = [];
-  // 0100
-  bits.push(0, 1, 0, 0);
-  // length in 8 bits
+  bits.push(0, 1, 0, 0); // byte mode indicator
   for (let i = 7; i >= 0; i--) bits.push((textBytes.length >> i) & 1);
-  // data
-  for (const b of textBytes) {
-    for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
-  }
-  // terminator
-  for (let i = 0; i < 4 && bits.length < dataCapacity * 8; i++) bits.push(0);
-  // pad to byte boundary
+  for (const b of textBytes) for (let i = 7; i >= 0; i--) bits.push((b >> i) & 1);
+  // Terminator
+  for (let i = 0; i < 4 && bits.length < config.data * 8; i++) bits.push(0);
   while (bits.length % 8 !== 0) bits.push(0);
-  // pad codewords
   const padBytes = [0xec, 0x11];
   let padIdx = 0;
-  while (bits.length < dataCapacity * 8) {
+  while (bits.length < config.data * 8) {
     for (let i = 7; i >= 0; i--) bits.push((padBytes[padIdx] >> i) & 1);
     padIdx = (padIdx + 1) % 2;
   }
 
-  // Convert bits to bytes
+  // Convert to bytes
   const dataBytes: number[] = [];
   for (let i = 0; i < bits.length; i += 8) {
     let byte = 0;
@@ -92,15 +104,36 @@ function generateQR(text: string): boolean[][] {
     dataBytes.push(byte);
   }
 
-  // Reed-Solomon error correction
-  const ecBytes = rsEncode(dataBytes, ecLen);
-  const allBytes = [...dataBytes, ...ecBytes];
+  // --- Reed-Solomon (block interleaving for multi-block versions) ---
+  const ecPerBlock = config.ec / config.blocks;
+  const dataPerBlock = Math.floor(config.data / config.blocks);
+  const allInterleaved: number[] = [];
 
-  // Create matrix
+  const dataBlocks: number[][] = [];
+  const ecBlocks: number[][] = [];
+  for (let b = 0; b < config.blocks; b++) {
+    const blockData = dataBytes.slice(b * dataPerBlock, (b + 1) * dataPerBlock);
+    dataBlocks.push(blockData);
+    ecBlocks.push(rsEncode(blockData, ecPerBlock));
+  }
+
+  // Interleave data
+  for (let i = 0; i < dataPerBlock; i++) {
+    for (let b = 0; b < config.blocks; b++) {
+      if (i < dataBlocks[b].length) allInterleaved.push(dataBlocks[b][i]);
+    }
+  }
+  // Interleave EC
+  for (let i = 0; i < ecPerBlock; i++) {
+    for (let b = 0; b < config.blocks; b++) {
+      if (i < ecBlocks[b].length) allInterleaved.push(ecBlocks[b][i]);
+    }
+  }
+
+  // --- Build matrix ---
   const matrix: (boolean | null)[][] = Array.from({ length: size }, () => Array(size).fill(null));
   const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
 
-  // Place finder patterns
   function placeFinder(row: number, col: number) {
     for (let r = -1; r <= 7; r++) {
       for (let c = -1; c <= 7; c++) {
@@ -118,13 +151,12 @@ function generateQR(text: string): boolean[][] {
   placeFinder(0, size - 7);
   placeFinder(size - 7, 0);
 
-  // Alignment pattern for V2 at (18,18)
-  if (version >= 2) {
-    const center = [6, 18];
-    for (let ai = 0; ai < center.length; ai++) {
-      for (let aj = 0; aj < center.length; aj++) {
-        const cr = center[ai], cc = center[aj];
-        // Skip if overlapping finder
+  // Alignment patterns
+  if (config.align.length > 0) {
+    const centers = config.align;
+    for (let ai = 0; ai < centers.length; ai++) {
+      for (let aj = 0; aj < centers.length; aj++) {
+        const cr = centers[ai], cc = centers[aj];
         if (reserved[cr]?.[cc]) continue;
         for (let r = -2; r <= 2; r++) {
           for (let c = -2; c <= 2; c++) {
@@ -150,30 +182,30 @@ function generateQR(text: string): boolean[][] {
   reserved[size - 8][8] = true;
 
   // Reserve format info areas
-  for (let i = 0; i < 15; i++) {
-    // Around top-left finder
-    if (i < 6) { reserved[8][i] = true; reserved[i][8] = true; }
-    else if (i < 8) { reserved[8][i + 1] = true; reserved[i + 1][8] = true; }
-    else if (i < 9) { reserved[8][size - 15 + i] = true; reserved[size - 15 + i][8] = true; }
-    else { reserved[8][size - 15 + i] = true; reserved[size - 15 + i][8] = true; }
+  for (let i = 0; i < 8; i++) {
+    reserved[8][i] = true; reserved[i][8] = true;
+    reserved[8][size - 1 - i] = true; reserved[size - 1 - i][8] = true;
   }
+  reserved[8][8] = true;
 
-  // Place data bits
+  // Reserve version info for V7+ (not needed for V1-6)
+
+  // --- Place data bits ---
   const allBits: number[] = [];
-  for (const b of allBytes) for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
+  for (const b of allInterleaved) for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
 
   let bitIdx = 0;
+  let upward = true;
   for (let col = size - 1; col >= 1; col -= 2) {
     if (col === 6) col = 5; // skip timing column
     for (let row = 0; row < size; row++) {
+      const actualRow = upward ? size - 1 - row : row;
       for (let c = 0; c < 2; c++) {
         const actualCol = col - c;
-        const isUp = ((size - 1 - col + (col <= 6 ? 1 : 0)) / 2) % 2 === 0;
-        const actualRow = isUp ? size - 1 - row : row;
-        if (actualRow < 0 || actualRow >= size || actualCol < 0 || actualCol >= size) continue;
+        if (actualCol < 0 || actualCol >= size) continue;
+        if (actualRow < 0 || actualRow >= size) continue;
         if (reserved[actualRow][actualCol]) continue;
         if (bitIdx < allBits.length) {
-          // Apply mask pattern 0: (row + col) % 2 === 0
           const masked = allBits[bitIdx] ^ ((actualRow + actualCol) % 2 === 0 ? 1 : 0);
           matrix[actualRow][actualCol] = masked === 1;
           bitIdx++;
@@ -182,37 +214,29 @@ function generateQR(text: string): boolean[][] {
         }
       }
     }
+    upward = !upward;
   }
 
-  // Format info for L level, mask 0: 0x77C4
-  const formatBits = 0x77C4;
-  const formatPositions: [number, number][] = [];
-  // Horizontal near top-left
-  for (let i = 0; i <= 5; i++) formatPositions.push([8, i]);
-  formatPositions.push([8, 7], [8, 8], [7, 8]);
-  for (let i = 5; i >= 0; i--) formatPositions.push([i, 8]);
-  // Additional positions
-  const formatPositions2: [number, number][] = [];
-  for (let i = 0; i < 7; i++) formatPositions2.push([size - 1 - i, 8]);
-  for (let i = 0; i < 8; i++) formatPositions2.push([8, size - 8 + i]);
+  // --- Format info ---
+  const fmtPositionsA: [number, number][] = [];
+  for (let i = 0; i <= 5; i++) fmtPositionsA.push([8, i]);
+  fmtPositionsA.push([8, 7], [8, 8], [7, 8]);
+  for (let i = 5; i >= 0; i--) fmtPositionsA.push([i, 8]);
+
+  const fmtPositionsB: [number, number][] = [];
+  for (let i = 0; i < 7; i++) fmtPositionsB.push([size - 1 - i, 8]);
+  for (let i = 0; i < 8; i++) fmtPositionsB.push([8, size - 8 + i]);
 
   for (let i = 0; i < 15; i++) {
-    const bit = ((formatBits >> (14 - i)) & 1) === 1;
-    if (i < formatPositions.length) {
-      const [r, c] = formatPositions[i];
-      matrix[r][c] = bit;
-    }
-    if (i < formatPositions2.length) {
-      const [r, c] = formatPositions2[i];
-      matrix[r][c] = bit;
-    }
+    const bit = ((FORMAT_BITS >> (14 - i)) & 1) === 1;
+    if (i < fmtPositionsA.length) { const [r, c] = fmtPositionsA[i]; matrix[r][c] = bit; }
+    if (i < fmtPositionsB.length) { const [r, c] = fmtPositionsB[i]; matrix[r][c] = bit; }
   }
 
-  // Convert nulls to false
   return matrix.map((row) => row.map((cell) => cell === true));
 }
 
-export function QRCode({ value, size = 200, fgColor = "#00E5FF", bgColor = "transparent" }: QRCodeProps) {
+export function QRCode({ value, size = 200, fgColor = "#000000", bgColor = "#ffffff" }: QRCodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -222,46 +246,45 @@ export function QRCode({ value, size = 200, fgColor = "#00E5FF", bgColor = "tran
     try {
       const modules = generateQR(value);
       const moduleCount = modules.length;
-      const cellSize = size / (moduleCount + 8); // quiet zone of 4 on each side
-      const offset = cellSize * 4;
+      const quietZone = 4;
+      const totalModules = moduleCount + quietZone * 2;
+      const cellSize = size / totalModules;
+      const offset = cellSize * quietZone;
 
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      ctx.clearRect(0, 0, size, size);
-
       // Background
-      if (bgColor !== "transparent") {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, size, size);
-      }
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, size, size);
 
-      // Draw modules with rounded corners
+      // Modules
       ctx.fillStyle = fgColor;
+      const r = Math.max(cellSize * 0.12, 0.5);
       for (let row = 0; row < moduleCount; row++) {
         for (let col = 0; col < moduleCount; col++) {
-          if (modules[row][col]) {
-            const x = offset + col * cellSize;
-            const y = offset + row * cellSize;
-            const r = cellSize * 0.15;
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + cellSize - r, y);
-            ctx.quadraticCurveTo(x + cellSize, y, x + cellSize, y + r);
-            ctx.lineTo(x + cellSize, y + cellSize - r);
-            ctx.quadraticCurveTo(x + cellSize, y + cellSize, x + cellSize - r, y + cellSize);
-            ctx.lineTo(x + r, y + cellSize);
-            ctx.quadraticCurveTo(x, y + cellSize, x, y + cellSize - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
-            ctx.fill();
-          }
+          if (!modules[row][col]) continue;
+          const x = offset + col * cellSize;
+          const y = offset + row * cellSize;
+          const w = cellSize + 0.5; // slight overlap to avoid gaps
+          const h = cellSize + 0.5;
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+          ctx.lineTo(x + r, y + h);
+          ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+          ctx.lineTo(x, y + r);
+          ctx.quadraticCurveTo(x, y, x + r, y);
+          ctx.fill();
         }
       }
     } catch {
-      // Silently fail -- code still shows as text
+      // Fall back to showing the text
     }
   }, [value, size, fgColor, bgColor]);
 
@@ -270,8 +293,8 @@ export function QRCode({ value, size = 200, fgColor = "#00E5FF", bgColor = "tran
       ref={canvasRef}
       width={size}
       height={size}
-      style={{ width: size, height: size }}
-      aria-label={`QR code to join game: ${value}`}
+      style={{ width: size, height: size, imageRendering: "pixelated" }}
+      aria-label={`QR code for: ${value}`}
       role="img"
     />
   );
