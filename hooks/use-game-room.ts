@@ -9,13 +9,21 @@ interface UseGameRoomOptions {
   enabled?: boolean;
 }
 
+export interface DepartedPlayer {
+  id: string;
+  name: string;
+  timestamp: number;
+}
+
 export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOptions) {
   const [room, setRoom] = useState<GameRoom | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [departedPlayers, setDepartedPlayers] = useState<DepartedPlayer[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const roomIdRef = useRef(roomId);
   const playerIdRef = useRef(playerId);
+  const prevPlayerIdsRef = useRef<Map<string, string>>(new Map());
 
   // Keep refs in sync for the beforeunload handler
   useEffect(() => { roomIdRef.current = roomId; }, [roomId]);
@@ -35,7 +43,30 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
         return;
       }
       const data = await res.json();
-      setRoom(data.room);
+      const newRoom = data.room as GameRoom;
+
+      // Detect departed players by comparing current vs previous player list
+      if (newRoom && prevPlayerIdsRef.current.size > 0) {
+        const newIds = new Set(newRoom.players.map((p) => p.id));
+        prevPlayerIdsRef.current.forEach((name, id) => {
+          if (!newIds.has(id) && id !== playerId) {
+            setDepartedPlayers((prev) => {
+              // Avoid duplicate notifications
+              if (prev.some((d) => d.id === id && Date.now() - d.timestamp < 5000)) return prev;
+              return [...prev, { id, name, timestamp: Date.now() }];
+            });
+          }
+        });
+      }
+
+      // Update the previous player map
+      if (newRoom) {
+        const map = new Map<string, string>();
+        newRoom.players.forEach((p) => map.set(p.id, p.name));
+        prevPlayerIdsRef.current = map;
+      }
+
+      setRoom(newRoom);
       setError(null);
     } catch {
       setError("Connection lost");
@@ -101,5 +132,9 @@ export function useGameRoom({ roomId, playerId, enabled = true }: UseGameRoomOpt
     [roomId, playerId]
   );
 
-  return { room, error, loading, sendAction, poll };
+  const dismissDeparted = useCallback((id: string) => {
+    setDepartedPlayers((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
+  return { room, error, loading, sendAction, poll, departedPlayers, dismissDeparted };
 }

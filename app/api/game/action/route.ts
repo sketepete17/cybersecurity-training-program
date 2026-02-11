@@ -32,7 +32,6 @@ export async function POST(req: Request) {
       case "submit_answer": {
         const answerNum = Number(body.answer);
         const qIdx = Number(body.questionIndex);
-        console.log("[v0] action submit_answer:", { questionIndex: qIdx, answer: answerNum, rawAnswer: body.answer, rawType: typeof body.answer });
         room = await submitAnswer(roomId, playerId, qIdx, answerNum);
         break;
       }
