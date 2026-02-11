@@ -11,19 +11,19 @@ interface LobbyScreenProps {
   room: GameRoom;
   playerId: string;
   isHost: boolean;
-  publicUrl?: string;
   onStartCountdown: () => void;
   onStartGame: () => void;
 }
 
-export function LobbyScreen({ room, playerId, isHost, publicUrl, onStartCountdown, onStartGame }: LobbyScreenProps) {
+const PUBLIC_DOMAIN = "https://cybershield.work";
+
+export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartGame }: LobbyScreenProps) {
   const [copied, setCopied] = useState(false);
   const [countdownDisplay, setCountdownDisplay] = useState<number | null>(null);
   const [showQR, setShowQR] = useState(true);
 
-  // Build the join URL using the public URL (from env) to avoid internal VM hostnames
-  const baseUrl = publicUrl || (typeof window !== "undefined" ? window.location.origin : "");
-  const joinUrl = baseUrl ? `${baseUrl}?code=${room.id}` : "";
+  // Always use the real public domain for QR codes
+  const joinUrl = `${PUBLIC_DOMAIN}?code=${room.id}`;
 
   const copyCode = useCallback(async () => {
     try {
