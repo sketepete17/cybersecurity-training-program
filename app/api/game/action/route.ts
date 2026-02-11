@@ -3,6 +3,7 @@ import {
   startCountdown,
   startGame,
   submitAnswer,
+  submitBattlePassword,
   nextQuestion,
   showResults,
   resetRoom,
