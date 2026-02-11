@@ -217,6 +217,20 @@ export function LobbyScreen({ room, playerId, isHost, onStartCountdown, onStartG
           </div>
         )}
 
+        {/* Game types preview */}
+        <div className="flex w-full flex-wrap items-center justify-center gap-3">
+          {[
+            { label: "Phish or Legit?", color: "#00E5FF" },
+            { label: "Password Strength", color: "#A855F7" },
+            { label: "Spot the URL", color: "#F97316" },
+          ].map((g) => (
+            <span key={g.label} className="rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-wider" 
+              style={{ background: `${g.color}10`, color: g.color, border: `1px solid ${g.color}20` }}>
+              {g.label}
+            </span>
+          ))}
+        </div>
+
         {/* Branding */}
         <div className="flex items-center gap-2" style={{ color: "rgba(255,255,255,0.15)" }}>
           <Shield className="h-4 w-4" />
